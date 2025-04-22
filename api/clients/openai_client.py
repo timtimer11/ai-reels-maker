@@ -26,9 +26,10 @@ def generate_commentary_script(title: str, description: str) -> str:
         • Payoff: 1–2 sentences delivering a satisfying conclusion.
         • Start with something like: "Did you know", or catchy line
     """
-
+    print('generating commentary script with openai api')
     openai_response = openai_client.responses.create(
         model="gpt-4o-mini",
         input=prompt
     )
+    print('done on commentary script with openai api')
     return openai_response.output_text

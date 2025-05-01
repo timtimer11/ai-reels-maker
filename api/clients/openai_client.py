@@ -1,11 +1,12 @@
 import os
+import uuid
 from openai import OpenAI
+from io import BytesIO
 from dotenv import load_dotenv
 
 load_dotenv()
 
-OPENAI_KEY = os.getenv('OPENAI_API_KEY')
-openai_client = OpenAI(api_key=OPENAI_KEY)
+openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 def generate_commentary_script(title: str, description: str) -> str:
     prompt = f"""
@@ -17,9 +18,9 @@ def generate_commentary_script(title: str, description: str) -> str:
         Follow these rules exactly:
         1. Respond ONLY with the voiceover text. Do NOT include any commentary, explanations, or formatting markup.
         2. Use clear, simple language suitable for a broad audience.
-        3. Avoid special characters or emojis (e.g., *, #, @, &, %, 🙂).
+        3. Avoid special characters or emojis.
         4. Do not include profanity, slurs, or any NSFW content.
-        5. Do NOT start with a greeting (e.g., "Hello," "Hey," etc.).
+        5. Do NOT start with a greeting.
         6. Structure the script as:
         • Hook: 1–2 sentences to grab attention immediately.
         • Story: unfold the narrative or key points.
@@ -33,3 +34,21 @@ def generate_commentary_script(title: str, description: str) -> str:
     )
     print('done on commentary script with openai api')
     return openai_response.output_text
+
+def text_to_speech_file(text: str, voice: str = "onyx") -> bytes:
+    try:
+        # Generate speech using OpenAI TTS API
+        response = openai_client.audio.speech.create(
+            model="gpt-4o-mini-tts",
+            voice=voice,
+            speed=3,
+            response_format='mp3',
+            input=text,
+            instructions="Speak in a insightful and excited tone."
+        )
+
+        audio_data = BytesIO(response.content)
+        return audio_data
+    except Exception as e:
+        print(f"Error generating speech: {e}")
+        raise e

@@ -1,15 +1,8 @@
 import subprocess
-import os
 import random
-from dotenv import load_dotenv
 from io import BytesIO
-from s3_client import upload_audio_to_s3,read_file_from_s3
-from openai_client import text_to_speech_file
 import tempfile
-
-load_dotenv()
-
-BUCKET_NAME = os.getenv('CLOUDFLARE_TTS_BUCKET_NAME')
+from .clients.captions_client import generate_captions_from_audio
 
 def get_audio_duration(audio_bytes: BytesIO) -> float:
     # Save the audio to a temporary file
@@ -41,7 +34,7 @@ def get_video_duration(video_bytes: BytesIO) -> float:
         )
         return float(result.stdout)
 
-def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes:
+def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO, with_captions=False) -> bytes:
     """
     Combines video with audio file using streaming pipeline
     """
@@ -54,6 +47,9 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
     audio_bytes.seek(0)
     if audio_duration >= video_duration:
         raise ValueError(f"Audio duration ({audio_duration}s) >= video duration ({video_duration}s)")
+
+    if with_captions:
+        transcript, captions = generate_captions_from_audio(audio_bytes)
 
     with tempfile.NamedTemporaryFile(delete=True, suffix=".mp4") as temp_video, \
          tempfile.NamedTemporaryFile(delete=True, suffix=".mp3") as temp_audio:
@@ -97,20 +93,20 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
             
         if not output:
             raise RuntimeError("FFmpeg produced empty output")
-            
+
         return output
 
-if __name__ == "__main__":
-    audio_speech = text_to_speech_file(text="this is a test audio script for money making idea")
-    subway_surfers_video = read_file_from_s3(bucket_name=BUCKET_NAME, file_name="subway_surfers.mp4")
-    # video_length = get_video_duration(subway_surfers_video)
-    # print(video_length)
-    # with open("test.mp3", "wb") as f:
-    #     f.write(obj.getbuffer())
-    combined_video_audio = process_video_streaming(audio_speech, subway_surfers_video)
-    # save the video to a file
-    with open("final+v.mp4", "wb") as f:
-        f.write(combined_video_audio)
-    # video_buffer = BytesIO(result)
-    # output_path = f"output_{random.randint(1000, 9999)}.mp4"
-    # s3_url = upload_audio_to_s3(object_name=video_buffer, bucket_name=BUCKET_NAME, file_name_in_s3=output_path)
+# if __name__ == "__main__":
+#     audio_speech = text_to_speech_file(text="this is a test audio script for money making idea")
+#     subway_surfers_video = read_file_from_s3(bucket_name=BUCKET_NAME, file_name="subway_surfers.mp4")
+#     # video_length = get_video_duration(subway_surfers_video)
+#     # print(video_length)
+#     # with open("test.mp3", "wb") as f:
+#     #     f.write(obj.getbuffer())
+#     combined_video_audio = process_video_streaming(audio_speech, subway_surfers_video)
+#     # save the video to a file
+#     with open("final+v.mp4", "wb") as f:
+#         f.write(combined_video_audio)
+#     # video_buffer = BytesIO(result)
+#     # output_path = f"output_{random.randint(1000, 9999)}.mp4"
+#     # s3_url = upload_audio_to_s3(object_name=video_buffer, bucket_name=BUCKET_NAME, file_name_in_s3=output_path)

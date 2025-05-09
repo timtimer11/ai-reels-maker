@@ -60,13 +60,13 @@ def upload_audio_to_s3(object_name: BytesIO, bucket_name: str, file_name_in_s3: 
         print(f"Error uploading file to S3: {e}")
         raise e
 
-if __name__ == "__main__":
-    # Test configuration
-    bucket_name = os.getenv('CLOUDFLARE_TTS_BUCKET_NAME')
-    file_name_in_s3 = "subway_surfers.mp4"
-    file_path = "/Users/timur/Downloads/brain_rot_production_v2/subway_surfers.mp4"
-    with open(file_path, 'rb') as f:
-        upload_audio_to_s3(object_name=f, bucket_name=bucket_name, file_name_in_s3=file_name_in_s3)
-    # obj = read_file_from_s3(bucket_name=bucket_name, file_name="test.mp3")
-    # with open("test.mp3", "wb") as f:
-    #     f.write(obj.getbuffer())
+# if __name__ == "__main__":
+#     # Test configuration
+#     bucket_name = os.getenv('CLOUDFLARE_TTS_BUCKET_NAME')
+#     file_name_in_s3 = "subway_surfers.mp4"
+#     file_path = "/Users/timur/Downloads/brain_rot_production_v2/subway_surfers.mp4"
+#     with open(file_path, 'rb') as f:
+#         upload_audio_to_s3(object_name=f, bucket_name=bucket_name, file_name_in_s3=file_name_in_s3)
+#     # obj = read_file_from_s3(bucket_name=bucket_name, file_name="test.mp3")
+#     # with open("test.mp3", "wb") as f:
+#     #     f.write(obj.getbuffer())

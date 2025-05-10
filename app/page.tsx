@@ -1,57 +1,94 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export default function Home() {
-  const [success, setSuccess] = useState(false);
+  const [taskId, setTaskId] = useState("");
+  const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [pollCount, setPollCount] = useState(0);
+  const [redditUrl, setRedditUrl] = useState("");
 
-  const fetchVoiceoverScript = async () => {
+  const startProcessing = async () => {
     try {
-      console.log("Fetching voiceover script...");
       setIsLoading(true);
+      setStatus("");
       setError("");
-      setSuccess(false);
+      setPollCount(0);
 
-      const response = await fetch("/api/py/reddit/reddit-commentary?url=https://www.reddit.com/r/YouShouldKnow/comments/1jvnvvg/ysk_that_your_alarm_ringtone_might_be_doing_more/", {
-        method: 'GET',
+      const response = await fetch("/api/py/reddit/reddit-commentary?url=" + encodeURIComponent(redditUrl), {
+        method: 'POST',
         headers: {
-          'Accept': 'application/json',
-        },
+          'Content-Type': 'application/json',
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error("Failed to start task");
 
-      const result = await response.json();
-
-      if (result === true) {
-        setSuccess(true);
-      } else {
-        throw new Error("Operation failed");
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
+      const data = await response.json();
+      setTaskId(data.task_id);
+      setStatus("PROCESSING");
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const checkTaskStatus = useCallback(async () => {
+    if (!taskId || status !== "PROCESSING") return;
+
+    try {
+      const response = await fetch(`/api/py/reddit/reddit-commentary/status/${taskId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      setStatus(data.status);
+      if (data.error) setError(data.error);
+      
+      if (data.status === "COMPLETED" || data.status === "FAILED") {
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      console.error('Error checking task status:', err);
+      setPollCount(prev => prev + 1);
+    }
+  }, [taskId, status]);
+
+  useEffect(() => {
+    if (status !== "PROCESSING" || !taskId) return;
+
+    const pollInterval = setInterval(checkTaskStatus, 2000);
+    
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [status, taskId, checkTaskStatus, pollCount]);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <div className="w-full max-w-md mb-4">
+        <input
+          type="text"
+          value={redditUrl}
+          onChange={(e) => setRedditUrl(e.target.value)}
+          placeholder="Enter Reddit post URL"
+          className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+        />
+      </div>
       <button 
-        onClick={fetchVoiceoverScript} 
-        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400"
-        disabled={isLoading}
+        onClick={startProcessing} 
+        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400 mb-4"
+        disabled={isLoading || status === "PROCESSING" || !redditUrl}
       >
-        {isLoading ? "Processing..." : "Generate"}
+        {isLoading ? "Starting..." : status === "PROCESSING" ? "Processing..." : "Generate Video"}
       </button>
 
-      {success && <p className="mt-4 text-green-500">Success!</p>}
-      {error && <p className="mt-4 text-red-500">Failed: {error}</p>}
+      {status && <p className={`text-${status === "COMPLETED" ? "green" : "blue"}-500`}>{status}</p>}
+      {error && <p className="text-red-500 mt-4">Error: {error}</p>}
     </main>
   );
 }

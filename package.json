@@ -5,7 +5,7 @@
   "scripts": {
     "fastapi-dev": "pip3 install -r requirements.txt && python3 -m uvicorn api.index:app --reload --reload-exclude='api/services/*' --reload-exclude='api/routers/*' --timeout-keep-alive 75",
     "next-dev": "next dev",
-    "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
+    "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\" \"npx next-video sync -w\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -24,6 +24,7 @@
     "eslint-config-next": "13.4.4",
     "lucide-react": "^0.509.0",
     "next": "^14.2.13",
+    "next-video": "^2.2.0",
     "postcss": "^8.4.47",
     "react": "18.3.1",
     "react-dom": "18.3.1",

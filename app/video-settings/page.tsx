@@ -2,10 +2,15 @@
 
 import { useState } from "react"; // Импортируем хук для управления состоянием
 import { useRouter } from 'next/navigation'; // Импорт роутера для навигации между страницами
-import { useVideoContext } from '../context/VideoContext';
 
 export default function VideoSettings() {
-  const { videoSettings, updateVideoSettings } = useVideoContext();
+  const [videoSettings, setVideoSettings] = useState({
+    voice: 'voice1',
+    video: 'video1',
+    captions: false,
+    script: ''
+  });
+  
   // Инициализация состояний компонента
   const [selectedVoice, setSelectedVoice] = useState('voice1'); // Состояние для выбранного голоса
   const [selectedVideo, setSelectedVideo] = useState('video1'); // Состояние для выбранного стиля видео
@@ -15,7 +20,7 @@ export default function VideoSettings() {
 
   // Функция для перехода на следующую страницу
   const generateVideo = () => {
-    updateVideoSettings({
+    setVideoSettings({
       voice: selectedVoice,
       video: selectedVideo,
       captions: addCaptions,

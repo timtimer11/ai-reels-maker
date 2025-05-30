@@ -14,59 +14,66 @@ s3_client = boto3.client(
     region_name='auto'
 )
 
+CLOUDFLARE_ENDPOINT_URL = os.getenv('CLOUDFLARE_ENDPOINT_URL')
+
 def read_file_from_s3(bucket_name: str, file_name: str) -> BytesIO:
     """
     Read a file from S3 bucket and return its content as a BytesIO object.
-
-    Args:
-        bucket_name (str): Имя S3 бакета
-        file_name (str): Имя файла в S3
-
-    Returns:
-        BytesIO: File content as a BytesIO object that can be read based on file type
     """
     try:
-        response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
+        full_path = f"{bucket_name}/{file_name}"
+        response = s3_client.get_object(Bucket=bucket_name, Key=full_path)
         file_content = response['Body'].read()
         return BytesIO(file_content)
     except Exception as e:
         print(f"Error reading file from S3: {e}")
         raise e
 
-def upload_audio_to_s3(object_name: BytesIO, bucket_name: str, file_name_in_s3: str, ) -> str:
+def upload_file_to_s3(object_name: BytesIO, bucket_name: str, file_name_in_s3: str, ) -> str:
     """
     Upload an audio buffer to S3 bucket and return its URL
-    
-    Args:
-        file_obj (BytesIO): Аудио буфер для загрузки
-        file_name_in_s3 (str): Имя файла в S3
-        bucket_name (str): Имя S3 бакета
-        
-    Returns:
-        str: URL загруженного файла
     """
     try:
-        # Загружаем файл в S3
+        # Ensure the object is a BytesIO
+        if not isinstance(object_name, BytesIO):
+            object_name = BytesIO(object_name)
+
+        # Reset the position to the beginning of the file
+        object_name.seek(0)
+        
+        # Use the full path including bucket name
+        full_path = f"{bucket_name}/{file_name_in_s3}"
+        print(f"Uploading file with full path: {full_path}")
+        
+        # Upload file to S3
         s3_client.upload_fileobj(
             object_name,
             bucket_name,
-            file_name_in_s3
+            full_path
         )
         
-        print(f"Uploading file to S3 key: {file_name_in_s3}")
+        print(f"Successfully uploaded file to S3 key: {full_path}")
 
         return True
     except Exception as e:
         print(f"Error uploading file to S3: {e}")
         raise e
 
-# if __name__ == "__main__":
-#     # Test configuration
-#     bucket_name = os.getenv('CLOUDFLARE_TTS_BUCKET_NAME')
-#     file_name_in_s3 = "subway_surfers.mp4"
-#     file_path = "/Users/timur/Downloads/brain_rot_production_v2/subway_surfers.mp4"
-#     with open(file_path, 'rb') as f:
-#         upload_audio_to_s3(object_name=f, bucket_name=bucket_name, file_name_in_s3=file_name_in_s3)
-#     # obj = read_file_from_s3(bucket_name=bucket_name, file_name="test.mp3")
-#     # with open("test.mp3", "wb") as f:
-#     #     f.write(obj.getbuffer())
+def get_s3_url(file_name: str) -> str:
+    """
+    Get the public URL for a file in S3 bucket.
+    
+    Args:
+        bucket_name (str): Name of the S3 bucket
+        file_name (str): Name of the file in S3
+        
+    Returns:
+        str: Public URL of the file
+    """
+    try:
+        # Generate the URL
+        url = f"{CLOUDFLARE_ENDPOINT_URL}/{file_name}"
+        return url
+    except Exception as e:
+        print(f"Error generating S3 URL: {e}")
+        raise e

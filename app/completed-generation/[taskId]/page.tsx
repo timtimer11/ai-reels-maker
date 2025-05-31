@@ -60,10 +60,15 @@ export default function CompletedGeneration() {
 
         {/* Video player */}
         <div className="mb-8">
-          <Video 
+          <video 
             src={videoUrl}
+            controls
             className="w-full rounded-lg shadow-lg"
-          />
+            style={{ maxHeight: '500px' }}
+            preload="metadata"
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         {/* Download button */}

@@ -12,9 +12,6 @@ router = APIRouter()
 
 load_dotenv()
 BUCKET_NAME = os.getenv('CLOUDFLARE_TTS_BUCKET_NAME')
-CLOUDFLARE_PUBLIC_URL = os.getenv('CLOUDFLARE_PUBLIC_URL')
-
-object_url = f"{CLOUDFLARE_PUBLIC_URL}/{BUCKET_NAME}/"
 
 @router.post("/reddit-commentary")
 async def start_reddit_commentary(url: str):
@@ -61,7 +58,7 @@ async def process_reddit_commentary(task_id: str, url: str):
 
         # Step 7: Get S3 URL for the video
         task_queue.update_task_status(task_id, TaskStatus.GETTING_VIDEO_URL, "Getting video URL...")
-        video_url = get_s3_url(f"output_video_{task_id}.mp4")
+        video_url = get_s3_url(BUCKET_NAME, f"output_video_{task_id}.mp4")
         
         # Update task status to COMPLETED with video URL
         task_queue.update_task_status(task_id, TaskStatus.COMPLETED, video_url=video_url)

@@ -14,7 +14,7 @@ s3_client = boto3.client(
     region_name='auto'
 )
 
-CLOUDFLARE_ENDPOINT_URL = os.getenv('CLOUDFLARE_ENDPOINT_URL')
+CLOUDFLARE_PUBLIC_BUCKET_URL = os.getenv('CLOUDFLARE_PUBLIC_BUCKET_URL')
 
 def read_file_from_s3(bucket_name: str, file_name: str) -> BytesIO:
     """
@@ -59,7 +59,7 @@ def upload_file_to_s3(object_name: BytesIO, bucket_name: str, file_name_in_s3: s
         print(f"Error uploading file to S3: {e}")
         raise e
 
-def get_s3_url(file_name: str) -> str:
+def get_s3_url(bucket_name: str, file_name: str) -> str:
     """
     Get the public URL for a file in S3 bucket.
     
@@ -72,7 +72,7 @@ def get_s3_url(file_name: str) -> str:
     """
     try:
         # Generate the URL
-        url = f"{CLOUDFLARE_ENDPOINT_URL}/{file_name}"
+        url = f"{CLOUDFLARE_PUBLIC_BUCKET_URL}/{bucket_name}/{file_name}"
         return url
     except Exception as e:
         print(f"Error generating S3 URL: {e}")

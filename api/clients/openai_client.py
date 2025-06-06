@@ -41,7 +41,8 @@ def text_to_speech_file(text: str, voice: str = "onyx") -> bytes:
             model="gpt-4o-mini-tts",
             voice=voice,
             speed=3,
-            response_format='mp3',
+            # response_format='mp3',
+            response_format='wav',
             input=text,
             instructions="Speak in a insightful and excited tone."
         )

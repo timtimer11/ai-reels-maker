@@ -2,11 +2,25 @@ import subprocess
 import random
 from io import BytesIO
 import tempfile
+import logging
+import time
+import os
 from ..clients.captions_client import generate_captions_from_audio
+
+# Set up logging
+log_dir = "logs"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+logging.basicConfig(
+    filename=os.path.join(log_dir, 'generation_logs.log'),
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 def get_audio_duration(audio_bytes: BytesIO) -> float:
     # Save the audio to a temporary file
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=True) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
         tmp.write(audio_bytes.read())
         tmp.flush()
 
@@ -38,25 +52,30 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO, with_cap
     """
     Combines video with audio file using streaming pipeline
     """
+    start_time = time.time()
+    logging.info("Starting video processing pipeline")
+    
     # Get video duration
     video_duration = get_video_duration(video_bytes)
     audio_duration = get_audio_duration(audio_bytes)
-    print(f"Video duration: {video_duration} seconds")
-    print(f"Audio duration: {audio_duration} seconds")
     video_bytes.seek(0)
     audio_bytes.seek(0)
+    logging.info(f"Duration calculation took {time.time() - start_time:.2f} seconds")
+    
     if audio_duration >= video_duration:
         raise ValueError(f"Audio duration ({audio_duration}s) >= video duration ({video_duration}s)")
 
     # Calculate random start time
     max_start_time = video_duration - audio_duration
     start_time = round(random.uniform(0, max_start_time), 2)
-    print(f"Starting at {start_time}s with {audio_duration}s segment")
+    logging.info(f"Starting at {start_time}s with {audio_duration}s segment")
 
     if with_captions:
+        caption_start = time.time()
         # Generate captions first
         transcript, captions = generate_captions_from_audio(audio_bytes)
         audio_bytes.seek(0)  # Reset audio position after caption generation
+        logging.info(f"Caption generation took {time.time() - caption_start:.2f} seconds")
         
         # Write SRT captions to a temp file
         with tempfile.NamedTemporaryFile(delete=True, suffix=".srt") as srt_file:
@@ -81,7 +100,7 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO, with_cap
                         if line.startswith("Style:"):
                             parts = line.strip().split(",")
                             parts[1] = "Arial"  # Simpler font
-                            parts[2] = "16"     # Larger font size
+                            parts[2] = "13"     # Larger font size
                             parts[5] = "&H00000000"  # Transparent outline
                             parts[16] = "1"     # Simpler outline
                             parts[17] = "0"     # No shadow
@@ -89,8 +108,9 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO, with_cap
                         f.write(line)
                 
                 # Process video with captions
+                ffmpeg_start = time.time()
                 with tempfile.NamedTemporaryFile(delete=True, suffix=".mp4") as temp_video, \
-                     tempfile.NamedTemporaryFile(delete=True, suffix=".mp3") as temp_audio:
+                     tempfile.NamedTemporaryFile(delete=True, suffix=".wav") as temp_audio:
                     
                     temp_video.write(video_bytes.read())
                     temp_audio.write(audio_bytes.read())
@@ -111,7 +131,7 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO, with_cap
                         '-c:v', 'libx264',
                         '-preset', 'ultrafast',  # Faster encoding
                         '-c:a', 'aac',
-                        '-b:a', '192k',
+                        '-b:a', '256k',  # Increased bitrate for WAV conversion
                         '-ar', '48000',
                         '-ac', '2',
                         '-shortest',
@@ -123,16 +143,19 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO, with_cap
                     output, stderr = ffmpeg_process.communicate()
                     
                     if ffmpeg_process.returncode != 0:
+                        logging.error(f"FFmpeg failed: {stderr.decode()}")
                         raise RuntimeError(f"FFmpeg failed: {stderr.decode()}")
                         
                     if not output:
+                        logging.error("FFmpeg produced empty output")
                         raise RuntimeError("FFmpeg produced empty output")
 
+                    logging.info(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
                     return output
     else:
         # Process video without captions
         with tempfile.NamedTemporaryFile(delete=True, suffix=".mp4") as temp_video, \
-             tempfile.NamedTemporaryFile(delete=True, suffix=".mp3") as temp_audio:
+             tempfile.NamedTemporaryFile(delete=True, suffix=".wav") as temp_audio:
              
             temp_video.write(video_bytes.read())
             temp_audio.write(audio_bytes.read())
@@ -150,7 +173,7 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO, with_cap
                 '-map', '1:a:0',
                 '-c:v', 'copy',
                 '-c:a', 'aac',
-                '-b:a', '192k',
+                '-b:a', '256k',  # Increased bitrate for WAV conversion
                 '-ar', '48000',
                 '-ac', '2',
                 '-shortest',

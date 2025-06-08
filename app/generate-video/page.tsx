@@ -7,7 +7,6 @@ export default function Home() {
   const router = useRouter();
   const [taskId, setTaskId] = useState("");
   const [status, setStatus] = useState("");
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [pollCount, setPollCount] = useState(0);
@@ -17,7 +16,6 @@ export default function Home() {
     try {
       setIsLoading(true);
       setStatus("");
-      setMessage("");
       setError("");
       setPollCount(0);
 
@@ -55,7 +53,6 @@ export default function Home() {
       console.log('New status from API:', data.status);
       
       setStatus(data.status);
-      setMessage(data.message || "");
       if (data.error) setError(data.error);
       
       if (data.status === "completed") {
@@ -111,11 +108,6 @@ export default function Home() {
             <p className={`text-${status === "completed" ? "green" : "blue"}-500`}>
               Status: {status}
             </p>
-            {message && (
-              <p className="text-gray-600 text-sm mt-1">
-                {message}
-              </p>
-            )}
           </div>
         )}
         {error && <p className="text-red-500 mb-4">Error: {error}</p>}

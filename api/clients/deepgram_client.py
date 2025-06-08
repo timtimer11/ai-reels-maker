@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from io import BytesIO
 import tempfile
+import subprocess
 
 load_dotenv()
 
@@ -80,9 +81,36 @@ class DeepgramService:
             print(f"Error generating captions: {e}")
             raise e
 
-if __name__ == "__main__":
-    deepgram_service = DeepgramService()
-    audio_data = deepgram_service.generate_audio_with_deepgram("Hello, world! This is a test of the deepgram api.")
-    print(audio_data)
-    captions = deepgram_service.generate_captions_with_deepgram(audio_data.getvalue())
-    print(captions)
+    def convert_srt_to_ass(self, srt_captions: str) -> str:
+        try:
+            # Create temporary files for SRT and ASS
+            with tempfile.NamedTemporaryFile(delete=True, suffix=".srt") as srt_file, \
+                 tempfile.NamedTemporaryFile(delete=True, suffix=".ass") as ass_file:
+                
+                # Write SRT content to temporary file
+                srt_file.write(srt_captions.encode('utf-8'))
+                srt_file.flush()
+                
+                # Convert using ffmpeg
+                subprocess.run([
+                    "ffmpeg", "-y",
+                    "-i", srt_file.name,
+                    "-c:s", "ass",
+                    ass_file.name
+                ], check=True)
+                
+                # Read the ASS content before the file is deleted
+                with open(ass_file.name, "r", encoding="utf-8") as f:
+                    ass_content = f.read()
+                
+                return ass_content
+                    
+        except Exception as e:
+            print(f"Error converting SRT to ASS: {e}")
+            raise e
+
+# if __name__ == "__main__":
+#     deepgram_service = DeepgramService()
+#     audio_data = deepgram_service.generate_audio_with_deepgram("Hello, world! This is a test of the deepgram api.")
+#     captions = deepgram_service.generate_captions_with_deepgram(audio_data.getvalue())
+#     ass_captions = deepgram_service.convert_srt_to_ass(captions)

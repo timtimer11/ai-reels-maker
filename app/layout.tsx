@@ -1,41 +1,15 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
-import {
-  Menubar,
-  MenubarMenu,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
+import { ClerkProvider } from '@clerk/nextjs'
+import { Navigation } from "@/components/Navigation"
+import { type Metadata } from 'next'
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Brain Rot App",
   description: "Generate your brain rot video",
 };
-
-function MenubarDemo() {
-  return (
-    <Menubar className="flex justify-center">
-      <div className="flex space-x-4">
-        <MenubarMenu>
-          <MenubarTrigger>Home</MenubarTrigger>
-        </MenubarMenu>
-        <MenubarMenu>
-          <MenubarTrigger>Features</MenubarTrigger>
-        </MenubarMenu>
-        <MenubarMenu>
-          <MenubarTrigger>Limits</MenubarTrigger>
-        </MenubarMenu>
-        <MenubarMenu>
-          <MenubarTrigger>Contact</MenubarTrigger>
-        </MenubarMenu>
-        <MenubarMenu>
-          <MenubarTrigger>Launch App</MenubarTrigger>
-        </MenubarMenu>
-      </div>
-    </Menubar>
-  )
-}
 
 export default function RootLayout({
   children,
@@ -43,11 +17,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-          <MenubarDemo />
+    <ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          <Navigation />
           {children}
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

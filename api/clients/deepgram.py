@@ -11,11 +11,17 @@ load_dotenv()
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 
 class DeepgramService:
+    """
+    This class is used to generate audio and captions with Deepgram.
+    """
     def __init__(self):
         self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
         self.options = SpeakOptions(model='aura-2-thalia-en')
 
     def generate_audio_with_deepgram(self, input_text: str) -> bytes:
+        """
+        Generate audio with Deepgram.
+        """
         try:
             # Create the request body as shown in documentation
             request_body = {
@@ -46,6 +52,9 @@ class DeepgramService:
             raise e
 
     def generate_captions_with_deepgram(self, AUDIO_FILE: bytes) -> str:
+        """
+        Generate captions with Deepgram.
+        """
         try:
             # Create a temporary file to store the audio
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
@@ -82,6 +91,9 @@ class DeepgramService:
             raise e
 
     def convert_srt_to_ass(self, srt_captions: str) -> str:
+        """
+        Convert SRT captions to ASS format.
+        """
         try:
             # Create temporary files for SRT and ASS
             with tempfile.NamedTemporaryFile(delete=True, suffix=".srt") as srt_file, \
@@ -108,9 +120,3 @@ class DeepgramService:
         except Exception as e:
             print(f"Error converting SRT to ASS: {e}")
             raise e
-
-# if __name__ == "__main__":
-#     deepgram_service = DeepgramService()
-#     audio_data = deepgram_service.generate_audio_with_deepgram("Hello, world! This is a test of the deepgram api.")
-#     captions = deepgram_service.generate_captions_with_deepgram(audio_data.getvalue())
-#     ass_captions = deepgram_service.convert_srt_to_ass(captions)

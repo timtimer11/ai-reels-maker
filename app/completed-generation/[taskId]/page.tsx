@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Video from 'next-video';
 
 export default function CompletedGeneration() {
   const params = useParams();
@@ -50,13 +49,9 @@ export default function CompletedGeneration() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="w-full max-w-2xl">
-        <h1 className="text-2xl font-bold mb-8 text-center">Your Video is Ready!</h1>
-        
-        {/* Video URL display */}
-        <div className="mb-4 p-4 bg-gray-100 rounded">
-          <p className="text-sm text-gray-600">Video URL:</p>
-          <p className="break-all">{videoUrl}</p>
-        </div>
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-4xl mb-6 text-center">
+          <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Your video is ready!</span>
+        </h1>
 
         {/* Video player */}
         <div className="mb-8">
@@ -76,7 +71,7 @@ export default function CompletedGeneration() {
           <a 
             href={videoUrl}
             download
-            className="inline-block px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 inline-block"
           >
             Download Video
           </a>

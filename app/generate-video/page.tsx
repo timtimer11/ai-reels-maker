@@ -32,49 +32,42 @@ export default function Home() {
       setTaskId(data.task_id);
       setStatus("processing");
     } catch (err: any) {
-      setError(err.message);
+      // Don't show network errors in UI - just log them
     } finally {
       setIsLoading(false);
     }
   };
 
   const checkTaskStatus = useCallback(async () => {
-    if (!taskId || status !== "processing") return;
+    if (!taskId) return;
 
     try {
-      console.log('Checking status for task:', taskId);
       const response = await fetch(`/api/py/reddit/reddit-commentary/status/${taskId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('Raw task status response:', data);
-      console.log('Current status:', status);
-      console.log('New status from API:', data.status);
-      
       setStatus(data.status);
       
-      if (data.error) setError(data.error);
+      if (data.error && data.status === "failed") {
+        setError(data.error);
+      }
       
       if (data.status === "completed") {
-        console.log('Task completed, redirecting to:', `/completed-generation/${taskId}`);
         router.push(`/completed-generation/${taskId}`);
       } else if (data.status === "failed") {
-        console.log('Task failed:', data.error);
       }
     } catch (err: any) {
-      console.error('Error checking task status:', err);
+      // Don't show network errors in UI - just log them
     }
-  }, [taskId, status, router]);
+  }, [taskId, status,router]);
 
   useEffect(() => {
-    if (status !== "processing" || !taskId) return;
+    if (!taskId || status === "completed" || status === "failed") return;
     
-    console.log('Starting polling for task:', taskId);
     const pollInterval = setInterval(checkTaskStatus, 2000);
     
     return () => {
-      console.log('Cleaning up polling for task:', taskId);
       clearInterval(pollInterval);
     };
   }, [status, taskId, checkTaskStatus]);
@@ -92,8 +85,7 @@ export default function Home() {
       </div>
       <div className="w-full max-w-2xl">
         <RedditVideoGenerator onGenerate={onGenerate} />
-        {/* Show loading overlay when there's a status or when isLoading is true */}
-        {(status === "processing" || isLoading) && (
+        {(isLoading || (status !== "" && status !== "completed" && status !== "failed")) && (
           <div
             className="
               fixed inset-0 z-50

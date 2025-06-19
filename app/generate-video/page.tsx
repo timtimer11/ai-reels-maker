@@ -56,6 +56,7 @@ export default function Home() {
       if (data.status === "completed") {
         router.push(`/completed-generation/${taskId}`);
       } else if (data.status === "failed") {
+        // Error message is already set above
       }
     } catch (err: any) {
       // Don't show network errors in UI - just log them
@@ -120,7 +121,12 @@ export default function Home() {
         )}
 
         {/* INLINE ERROR */}
-        {error && <p className="mt-4 text-red-500">Error: {error}</p>}
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 font-medium">Error occurred:</p>
+            <p className="text-red-500 text-sm mt-1">{error}</p>
+          </div>
+        )}
       </div>
     </main>
   );

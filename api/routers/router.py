@@ -6,6 +6,7 @@ from ..utils.task_queue import task_queue, TaskStatus
 from ..clients.reddit import RedditClient
 import os
 import asyncio
+import traceback
 
 router = APIRouter()
 
@@ -25,27 +26,78 @@ async def start_reddit_commentary(url: str):
 
 async def process_reddit_commentary(task_id: str, url: str):
     try:
+        print(f"Starting Reddit commentary processing for task {task_id} with URL: {url}")
+        
         # Step 1: Get Reddit content
         task_queue.update_task_status(task_id, TaskStatus.FETCHING_REDDIT_POST)
+        print("Step 1: Fetching Reddit post...")
         reddit_client = RedditClient()
-        fetched_post = await asyncio.to_thread(reddit_client.fetch_post, url)
-        post_data = await asyncio.to_thread(reddit_client.extract_post_data, fetched_post)
+        
+        try:
+            fetched_post = await asyncio.to_thread(reddit_client.fetch_post, url)
+            print("Successfully fetched Reddit post")
+        except Exception as e:
+            error_msg = f"Error fetching Reddit post: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
+            
+        try:
+            post_data = await asyncio.to_thread(reddit_client.extract_post_data, fetched_post)
+            print("Successfully extracted post data")
+        except Exception as e:
+            error_msg = f"Error extracting post data: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
         
         # Step 2: Generate script
         task_queue.update_task_status(task_id, TaskStatus.GENERATING_SCRIPT)
-        script = await asyncio.to_thread(generate_commentary_script, post_data["title"], post_data["description"])
+        print("Step 2: Generating script...")
+        try:
+            script = await asyncio.to_thread(generate_commentary_script, post_data["title"], post_data["description"])
+            print("Successfully generated script")
+        except Exception as e:
+            error_msg = f"Error generating script: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
         
         # Step 3: Generate audio
         task_queue.update_task_status(task_id, TaskStatus.GENERATING_VOICEOVER)
-        audio_speech = await asyncio.to_thread(text_to_speech_file, script)
+        print("Step 3: Generating voiceover...")
+        try:
+            audio_speech = await asyncio.to_thread(text_to_speech_file, script)
+            print("Successfully generated voiceover")
+        except Exception as e:
+            error_msg = f"Error generating voiceover: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
         
         # Step 4: Get video template
         task_queue.update_task_status(task_id, TaskStatus.FETCHING_BACKGROUND_VIDEO)
-        subway_surfers_video = await asyncio.to_thread(cloudflare_s3.read_file_from_s3, BUCKET_NAME, "ss_background.mp4")
+        print("Step 4: Fetching background video...")
+        try:
+            subway_surfers_video = await asyncio.to_thread(cloudflare_s3.read_file_from_s3, BUCKET_NAME, "ss_background.mp4")
+            print("Successfully fetched background video")
+        except Exception as e:
+            error_msg = f"Error fetching background video: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
         
         # Step 5: Process video
         task_queue.update_task_status(task_id, TaskStatus.PROCESSING_VIDEO)
-        video_bytes = await asyncio.to_thread(process_video_streaming, audio_speech, subway_surfers_video)
+        print("Step 5: Processing video...")
+        try:
+            video_bytes = await asyncio.to_thread(process_video_streaming, audio_speech, subway_surfers_video)
+            print("Successfully processed video")
+        except Exception as e:
+            error_msg = f"Error processing video: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
         
         # Save video locally
         output_path = f"output_video_{task_id}.mp4"
@@ -55,19 +107,37 @@ async def process_reddit_commentary(task_id: str, url: str):
 
         # Step 6: Upload video to S3
         task_queue.update_task_status(task_id, TaskStatus.GETTING_VIDEO_URL)
-        await asyncio.to_thread(cloudflare_s3.upload_file_to_s3, video_bytes, BUCKET_NAME, f"output_video_{task_id}.mp4")
+        print("Step 6: Uploading video to S3...")
+        try:
+            await asyncio.to_thread(cloudflare_s3.upload_file_to_s3, video_bytes, BUCKET_NAME, f"output_video_{task_id}.mp4")
+            print("Successfully uploaded video to S3")
+        except Exception as e:
+            error_msg = f"Error uploading video to S3: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
 
         # Step 7: Get S3 URL for the video
-        task_queue.update_task_status(task_id, TaskStatus.GETTING_VIDEO_URL)
-        video_url = await asyncio.to_thread(cloudflare_s3.get_s3_url, BUCKET_NAME, f"output_video_{task_id}.mp4")
+        print("Step 7: Getting video URL...")
+        try:
+            video_url = await asyncio.to_thread(cloudflare_s3.get_s3_url, BUCKET_NAME, f"output_video_{task_id}.mp4")
+            print(f"Successfully got video URL: {video_url}")
+        except Exception as e:
+            error_msg = f"Error getting video URL: {str(e)}"
+            print(error_msg)
+            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
+            raise e
         
         # Update task status to COMPLETED with video URL
         task_queue.update_task_status(task_id, TaskStatus.COMPLETED, video_url)
+        print(f"Task {task_id} completed successfully!")
         
-        # Log total time
     except Exception as e:
         # If an error occurs, mark the task as failed
-        task_queue.update_task_status(task_id, TaskStatus.FAILED)
+        error_msg = f"General error in process_reddit_commentary for task {task_id}: {str(e)}"
+        print(error_msg)
+        print(f"Full traceback: {traceback.format_exc()}")
+        task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
         raise e
 
 @router.get("/reddit-commentary/status/{task_id}")

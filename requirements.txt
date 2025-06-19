@@ -16,7 +16,7 @@ certifi==2025.6.15
 charset-normalizer==3.4.2
 click==8.2.1
 cyclonedx-python-lib==10.2.0
-dataclasses-json==0.6.7
+dataclasses-json
 deepgram-captions==1.2.0
 deepgram-sdk==4.3.1
 defusedxml==0.7.1
@@ -39,7 +39,7 @@ license-expression==30.4.1
 llvmlite==0.44.0
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
-marshmallow==4.0.0
+marshmallow
 mdurl==0.1.2
 more-itertools==10.7.0
 mpmath==1.3.0

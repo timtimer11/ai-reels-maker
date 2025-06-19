@@ -10,7 +10,7 @@ const Footer = () => {
               AI Reels Maker
             </h3>
             <p className="text-gray-400 mb-6 max-w-md">
-              Made for fun. Don't get mad if one day the app is down.
+              Made for fun. Don&apos;t get mad if one day the app is down.
             </p>
             <div className="flex space-x-4">
               <a href="https://www.linkedin.com/in/timur-kulbuzhev/" target="_blank" rel="noopener noreferrer">

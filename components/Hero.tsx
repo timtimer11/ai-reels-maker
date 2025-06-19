@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Play, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 const Hero = () => {
   return (
@@ -29,11 +29,12 @@ const Hero = () => {
           </div>
           
           <div className="relative mx-auto max-w-4xl">
-            <div className="aspect-video rounded-2xl bg-gradient-to-br from-purple-100 to-blue-100 shadow-2xl overflow-hidden">
-              <img 
+            <div className="aspect-video rounded-2xl bg-gradient-to-br from-purple-100 to-blue-100 shadow-2xl overflow-hidden relative">
+              <Image 
                 src="/product_guide.png" 
                 alt="Product Guide" 
-                className="h-full w-full object-contain"
+                fill
+                className="object-contain"
               />
             </div>
           </div>

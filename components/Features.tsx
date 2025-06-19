@@ -1,4 +1,4 @@
-import { Zap, Brain, Palette, TrendingUp, Clock, Share2 } from "lucide-react";
+import { Zap, Brain, Palette } from "lucide-react";
 
 const features = [
   {
@@ -9,7 +9,7 @@ const features = [
   {
     icon: Zap,
     title: "No Editing, No Extra Tools",
-    description: "Skip the hassle of generating voiceovers and stitching them with video clips - it’s all handled in single click"
+    description: "Skip the hassle of generating voiceovers and stitching them with video clips - it&apos;s all handled in single click"
   },
   {
     icon: Palette,

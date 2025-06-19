@@ -2,21 +2,8 @@ import subprocess
 import random
 from io import BytesIO
 import tempfile
-import logging
 import time
-import os
 from ..clients.deepgram import DeepgramService
-
-# Set up logging
-log_dir = "logs"
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-
-logging.basicConfig(
-    filename=os.path.join(log_dir, 'generation_logs.log'),
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
 
 deepgram_service = DeepgramService()
 
@@ -36,7 +23,6 @@ def get_audio_duration(audio_bytes: BytesIO) -> float:
             stderr=subprocess.STDOUT
         )
         duration_str = result.stdout.decode().strip()
-        print(f"Duration: {duration_str} seconds")
         return float(duration_str) if duration_str else 0.0
 
 def get_video_duration(video_bytes: BytesIO) -> float:
@@ -61,14 +47,14 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
     Combines video with audio file using streaming pipeline
     """
     start_time = time.time()
-    logging.info("Starting video processing pipeline")
+    print("Starting video processing pipeline")
     
     # Get video duration
     video_duration = get_video_duration(video_bytes)
     audio_duration = get_audio_duration(audio_bytes)
     video_bytes.seek(0)
     audio_bytes.seek(0)
-    logging.info(f"Duration calculation took {time.time() - start_time:.2f} seconds")
+    print(f"Duration calculation took {time.time() - start_time:.2f} seconds")
     
     if audio_duration >= video_duration:
         raise ValueError(f"Audio duration ({audio_duration}s) >= video duration ({video_duration}s)")
@@ -76,13 +62,13 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
     # Calculate random start time
     max_start_time = video_duration - audio_duration
     start_time = round(random.uniform(0, max_start_time), 2)
-    logging.info(f"Starting at {start_time}s with {audio_duration}s segment")
+    print(f"Starting at {start_time}s with {audio_duration}s segment")
 
     caption_start = time.time()
     # Generate captions first
     captions = deepgram_service.generate_captions_with_deepgram(audio_bytes.getvalue())
     audio_bytes.seek(0)  # Reset audio position after caption generation
-    logging.info(f"Caption generation took {time.time() - caption_start:.2f} seconds")
+    print(f"Caption generation took {time.time() - caption_start:.2f} seconds")
     
     # Convert SRT to ASS and get the content
     ass_content = deepgram_service.convert_srt_to_ass(captions)
@@ -145,12 +131,12 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
             output, stderr = ffmpeg_process.communicate()
             
             if ffmpeg_process.returncode != 0:
-                logging.error(f"FFmpeg failed: {stderr.decode()}")
+                print(f"FFmpeg failed: {stderr.decode()}")
                 raise RuntimeError(f"FFmpeg failed: {stderr.decode()}")
                 
             if not output:
-                logging.error("FFmpeg produced empty output")
+                print("FFmpeg produced empty output")
                 raise RuntimeError("FFmpeg produced empty output")
 
-            logging.info(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
+            print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
             return output

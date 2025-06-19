@@ -5,13 +5,11 @@ from ..media.video import process_video_streaming
 from ..utils.task_queue import task_queue, TaskStatus
 from ..clients.reddit import RedditClient
 import os
-from dotenv import load_dotenv
 import asyncio
 
 router = APIRouter()
 
-load_dotenv()
-BUCKET_NAME = os.getenv('CLOUDFLARE_TTS_BUCKET_NAME')
+BUCKET_NAME = os.environ.get('CLOUDFLARE_TTS_BUCKET_NAME')
 
 cloudflare_s3 = CloudflareS3()
 

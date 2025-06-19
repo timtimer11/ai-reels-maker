@@ -1,14 +1,11 @@
 from deepgram import DeepgramClient, SpeakOptions, PrerecordedOptions
 from deepgram_captions import DeepgramConverter, srt
-from dotenv import load_dotenv
 import os
 from io import BytesIO
 import tempfile
 import subprocess
 
-load_dotenv()
-
-DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
 
 class DeepgramService:
     """

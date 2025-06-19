@@ -1,20 +1,17 @@
 import os
 import boto3
-from dotenv import load_dotenv
 from io import BytesIO
-
-load_dotenv()
 
 # Configuration
 S3_CONFIG = {
     'service_name': 's3',
-    'endpoint_url': os.getenv('CLOUDFLARE_ENDPOINT_URL'),
-    'aws_access_key_id': os.getenv('CLOUDFLARE_ACCESS_KEY_ID'),
-    'aws_secret_access_key': os.getenv('CLOUDFLARE_SECRET_ACCESS_KEY'),
+    'endpoint_url': os.environ.get('CLOUDFLARE_ENDPOINT_URL'),
+    'aws_access_key_id': os.environ.get('CLOUDFLARE_ACCESS_KEY_ID'),
+    'aws_secret_access_key': os.environ.get('CLOUDFLARE_SECRET_ACCESS_KEY'),
     'region_name': 'auto'
 }
 
-CLOUDFLARE_PUBLIC_BUCKET_URL = os.getenv('CLOUDFLARE_PUBLIC_BUCKET_URL')
+CLOUDFLARE_PUBLIC_BUCKET_URL = os.environ.get('CLOUDFLARE_PUBLIC_BUCKET_URL')
 
 class CloudflareS3:
     """

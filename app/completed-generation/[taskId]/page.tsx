@@ -12,7 +12,7 @@ export default function CompletedGeneration() {
   useEffect(() => {
     const fetchVideoUrl = async () => {
       try {
-        const response = await fetch(`/api/py/reddit/reddit-commentary/status/${taskId}`);
+        const response = await fetch(`https://ai-reels-maker.vercel.app/api/py/reddit/reddit-commentary/status/${taskId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch video URL');
         }

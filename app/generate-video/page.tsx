@@ -19,7 +19,7 @@ export default function Home() {
       setStatus("");
       setError("");
 
-      const response = await fetch("/api/py/reddit/reddit-commentary?url=" + encodeURIComponent(redditUrl), {
+      const response = await fetch("https://ai-reels-maker.vercel.app/api/py/reddit/reddit-commentary?url=" + encodeURIComponent(redditUrl), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ export default function Home() {
     if (!taskId) return;
 
     try {
-      const response = await fetch(`/api/py/reddit/reddit-commentary/status/${taskId}`);
+      const response = await fetch(`https://ai-reels-maker.vercel.app/api/py/reddit/reddit-commentary/status/${taskId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

@@ -5,7 +5,6 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 const navigationItems = [
   { name: 'Home', href: '/' },
-  { name: 'Limits', href: '/limits' },
   { name: 'Contact', href: '/contact' },
   { name: 'Launch App', href: '/generate-video' },
 ]

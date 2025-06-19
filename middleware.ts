@@ -1,7 +1,9 @@
-import { ClerkMiddlewareAuth, clerkMiddleware } from "@clerk/nextjs/server";
+import { ClerkMiddlewareAuth, clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextRequest, NextResponse } from "next/server";
+
+const isProtectedRoute = createRouteMatcher(['/generate-video(.*)','/completed-generation(.*)'])
 
 const redis = Redis.fromEnv();
 
@@ -31,6 +33,7 @@ export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRe
         if (!success) return res;
         return res;
     }
+    if (isProtectedRoute(request)) await auth.protect()
     return NextResponse.next();
 });
 

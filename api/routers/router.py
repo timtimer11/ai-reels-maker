@@ -43,7 +43,7 @@ async def process_reddit_commentary(task_id: str, url: str):
         
         # Step 4: Get video template
         task_queue.update_task_status(task_id, TaskStatus.FETCHING_BACKGROUND_VIDEO)
-        subway_surfers_video = await asyncio.to_thread(cloudflare_s3.read_file_from_s3, BUCKET_NAME, "subway_surfers_short.mp4")
+        subway_surfers_video = await asyncio.to_thread(cloudflare_s3.read_file_from_s3, BUCKET_NAME, "ss_background.mp4")
         
         # Step 5: Process video
         task_queue.update_task_status(task_id, TaskStatus.PROCESSING_VIDEO)

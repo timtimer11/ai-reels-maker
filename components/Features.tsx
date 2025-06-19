@@ -3,35 +3,21 @@ import { Zap, Brain, Palette, TrendingUp, Clock, Share2 } from "lucide-react";
 const features = [
   {
     icon: Brain,
-    title: "AI-Powered Generation",
-    description: "Advanced AI analyzes trends and creates engaging content tailored to your audience"
+    title: "Smart Content Extraction",
+    description: "Just paste a link to Reddit post and AI will grab the best parts to turn them into a scroll-stopping content"
   },
   {
     icon: Zap,
-    title: "Lightning Fast",
-    description: "Generate professional reels in under 30 seconds with our optimized AI engine"
+    title: "No Editing, No Extra Tools",
+    description: "Skip the hassle of generating voiceovers and stitching them with video clips - it’s all handled in single click"
   },
   {
     icon: Palette,
-    title: "Custom Branding",
-    description: "Apply your brand colors, fonts, and style to maintain consistent visual identity"
-  },
-  {
-    icon: TrendingUp,
-    title: "Viral Optimization",
-    description: "Built-in algorithms optimize your content for maximum engagement and reach"
-  },
-  {
-    icon: Clock,
-    title: "Schedule & Automate",
-    description: "Plan and schedule your content across multiple platforms automatically"
-  },
-  {
-    icon: Share2,
-    title: "Multi-Platform Export",
-    description: "Export in perfect formats for Instagram, TikTok, YouTube Shorts, and more"
+    title: "Ready for Reels & TikTok",
+    description: "Auto-captions and sticky background video work together to boost watch time"
   }
 ];
+
 
 const Features = () => {
   return (
@@ -39,11 +25,10 @@ const Features = () => {
       <div className="mx-auto max-w-7xl">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-4">
-            Everything you need to go viral
+           Turn Reddit posts into engaging videos
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Powerful features designed to help creators, businesses, and influencers 
-            create engaging content that drives results.
+            Built for creators who want an easier way to turn Reddit content into short-form content.
           </p>
         </div>
         

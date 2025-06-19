@@ -25,6 +25,8 @@ def generate_commentary_script(title: str, description: str) -> str:
         • Story: unfold the narrative or key points.
         • Payoff: 1–2 sentences delivering a satisfying conclusion.
         • Start with something like: "Did you know", or catchy line
+
+        Make sure that the text is not too long and not too short. The video is from 15 to 30 seconds.
     """
     print('generating commentary script with openai api')
     openai_response = openai_client.responses.create(

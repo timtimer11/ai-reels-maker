@@ -60,7 +60,7 @@ export default function Home() {
     } catch (err: any) {
       // Don't show network errors in UI - just log them
     }
-  }, [taskId, status,router]);
+  }, [taskId,router]);
 
   useEffect(() => {
     if (!taskId || status === "completed" || status === "failed") return;

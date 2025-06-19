@@ -6,7 +6,8 @@ const RedditVideoGenerator = ({ onGenerate }: { onGenerate: (url: string) => voi
 
   const isValidRedditUrl = (url: string) => {
     if (!url) return false;
-    return url.includes('reddit.com/r/') && url.includes('/comments/');
+    // Accept both desktop URLs (/comments/) and mobile URLs (/s/)
+    return url.includes('reddit.com/r/') && (url.includes('/comments/') || url.includes('/s/'));
   };
 
   return (

@@ -9,7 +9,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Local development
-        "https://ai-reels-maker.vercel.app/generate-video" 
+        "https://ai-reels-maker.vercel.app"  # Your Vercel deployment
     ],
     allow_credentials=True, # Allows cookies and authentication
     allow_methods=["*"], # Allows all HTTP methods (GET, POST, etc.)

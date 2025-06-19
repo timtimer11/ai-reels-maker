@@ -15,7 +15,7 @@ const Hero = () => {
           
           <p className="mx-auto max-w-2xl text-xl text-gray-600 mb-10">
             Transform Reddit content into engaging video content with voiceover.
-            No editing skills required – just pure creativity unleashed.
+            No editing skills required.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">

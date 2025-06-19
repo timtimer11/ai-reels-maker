@@ -6,4 +6,3 @@ python-dotenv
 pydantic
 boto3
 deepgram-sdk
-git+https://github.com/deepgram/deepgram-python-captions.git

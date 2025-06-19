@@ -7,8 +7,8 @@ import { type Metadata } from 'next'
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Brain Rot App",
-  description: "Generate your brain rot video",
+  title: "ShortsAi",
+  description: "Generate AI Shorts in few clicks",
   icons: {
     icon: '/favicon.ico',
   },

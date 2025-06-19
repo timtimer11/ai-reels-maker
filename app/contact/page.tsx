@@ -17,15 +17,15 @@ export default function Contact() {
           
           <div className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
             <p className="mb-4">
-                Lately, I've been seeing a ton of brain-rot videos everywhere. You know, those mindless reels that somehow monetize.
+                Lately, I&apos;ve been seeing a ton of brain-rot videos everywhere. You know, those mindless reels that somehow monetize.
             </p>
 
             <p className="mb-4">
-                So naturally, I thought, what if I built a pipeline that produces and posts these videos 24/7 while I'm sleeping and making a "bank"?
+                So naturally, I thought, what if I built a pipeline that produces and posts these videos 24/7 while I&apos;m sleeping and making a &quot;bank&quot;?
             </p>
 
             <p className="mb-4">
-                However, I've changed my mind once I had to dive into TikTok, Instagram, and YouTube API docs, cause I ain't got time to read all of that.
+                However, I&apos;ve changed my mind once I had to dive into TikTok, Instagram, and YouTube API docs, cause I ain&apos;t got time to read all of that.
             </p>
 
             <p className="mb-4">
@@ -40,8 +40,6 @@ export default function Contact() {
              If you have read this far, you may want to check out my LinkedIn too.
             </p>
             </div>
-
-          
           <div className="flex justify-center gap-4 mb-16">
             <a 
               href="https://www.linkedin.com/in/timur-kulbuzhev/" 
@@ -50,7 +48,7 @@ export default function Contact() {
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <Linkedin className="h-5 w-5" />
-              Let's connect on LinkedIn
+              Let&apos;s connect on LinkedIn
             </a>
           </div>
         </div>

@@ -34,7 +34,7 @@ export default function Home() {
     } catch (err: any) {
       // Don't show network errors in UI - just log them
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); 
     }
   };
 

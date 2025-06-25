@@ -32,7 +32,7 @@ export default function Home() {
       setTaskId(data.task_id);
       setStatus("processing");
     } catch (err: any) {
-      // Don't show network errors in UI - just log them
+      console.log(err)
     } finally {
       setIsLoading(false); 
     }
@@ -59,7 +59,7 @@ export default function Home() {
         // Error message is already set above
       }
     } catch (err: any) {
-      // Don't show network errors in UI - just log them
+      console.log(err)
     }
   }, [taskId,router]);
 

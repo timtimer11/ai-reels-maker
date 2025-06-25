@@ -13,16 +13,21 @@ class RedditClient:
         }
 
     def fetch_post(self, url: str) -> Dict:
-        """
-        Fetches a post and its comments from a given URL and returns the post data.
-        """
-        url_processed = url + ".json"
-        response = requests.get(url_processed, headers=self.headers)
+        try:
+            url_processed = url + ".json"
+            response = requests.get(url_processed, headers=self.headers, timeout=10)
+            print('Response received')
+        except requests.RequestException as e:
+            print(f'{e}')
+            raise Exception(f"Network error fetching Reddit post: {e}")
 
         if response.status_code == 200:
+            print('Response received with Status=200')
             return response.json()
         else:
+            print(f'{response.status_code}')
             raise Exception(f"Failed to fetch Reddit post. Status code: {response.status_code}")
+
 
     def extract_post_data(self, data: Dict, top_n: int = 5) -> Dict:
         """

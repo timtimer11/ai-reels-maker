@@ -38,7 +38,7 @@ async def process_reddit_commentary(task_id: str, url: str):
             # post_data = await asyncio.to_thread(reddit_client.get_post_and_comments, url, top_n=5)
             # print("Successfully fetched Reddit post and extracted data")
             post_data = reddit_client.get_post_and_comments(url, top_n=5)
-            print("✅ CONTROL RETURNED — post_data:", post_data)
+            print("Successfully fetched Reddit post and extracted data")
         except Exception as e:
             error_msg = f"Error fetching and processing Reddit post: {str(e)}"
             print(error_msg)
@@ -49,7 +49,8 @@ async def process_reddit_commentary(task_id: str, url: str):
         task_queue.update_task_status(task_id, TaskStatus.GENERATING_SCRIPT)
         print("Step 2: Generating script...")
         try:
-            script = await asyncio.to_thread(generate_commentary_script, post_data["title"], post_data["description"])
+            # script = await asyncio.to_thread(generate_commentary_script, post_data["title"], post_data["description"])
+            script = generate_commentary_script, post_data["title"], post_data["description"]
             print("Successfully generated script")
         except Exception as e:
             error_msg = f"Error generating script: {str(e)}"
@@ -61,7 +62,8 @@ async def process_reddit_commentary(task_id: str, url: str):
         task_queue.update_task_status(task_id, TaskStatus.GENERATING_VOICEOVER)
         print("Step 3: Generating voiceover...")
         try:
-            audio_speech = await asyncio.to_thread(text_to_speech_file, script)
+            # audio_speech = await asyncio.to_thread(text_to_speech_file, script)
+            audio_speech = text_to_speech_file, script
             print("Successfully generated voiceover")
         except Exception as e:
             error_msg = f"Error generating voiceover: {str(e)}"
@@ -73,7 +75,8 @@ async def process_reddit_commentary(task_id: str, url: str):
         task_queue.update_task_status(task_id, TaskStatus.FETCHING_BACKGROUND_VIDEO)
         print("Step 4: Fetching background video...")
         try:
-            subway_surfers_video = await asyncio.to_thread(cloudflare_s3.read_file_from_s3, BUCKET_NAME, "ss_background.mp4")
+            # subway_surfers_video = await asyncio.to_thread(cloudflare_s3.read_file_from_s3, BUCKET_NAME, "ss_background.mp4")
+            subway_surfers_video = cloudflare_s3.read_file_from_s3, BUCKET_NAME, "ss_background.mp4"
             print("Successfully fetched background video")
         except Exception as e:
             error_msg = f"Error fetching background video: {str(e)}"
@@ -85,7 +88,8 @@ async def process_reddit_commentary(task_id: str, url: str):
         task_queue.update_task_status(task_id, TaskStatus.PROCESSING_VIDEO)
         print("Step 5: Processing video...")
         try:
-            video_bytes = await asyncio.to_thread(process_video_streaming, audio_speech, subway_surfers_video)
+            # video_bytes = await asyncio.to_thread(process_video_streaming, audio_speech, subway_surfers_video)
+            video_bytes = process_video_streaming, audio_speech, subway_surfers_video
             print("Successfully processed video")
         except Exception as e:
             error_msg = f"Error processing video: {str(e)}"
@@ -103,7 +107,8 @@ async def process_reddit_commentary(task_id: str, url: str):
         task_queue.update_task_status(task_id, TaskStatus.GETTING_VIDEO_URL)
         print("Step 6: Uploading video to S3...")
         try:
-            await asyncio.to_thread(cloudflare_s3.upload_file_to_s3, video_bytes, BUCKET_NAME, f"output_video_{task_id}.mp4")
+            # await asyncio.to_thread(cloudflare_s3.upload_file_to_s3, video_bytes, BUCKET_NAME, f"output_video_{task_id}.mp4")
+            cloudflare_s3.upload_file_to_s3, video_bytes, BUCKET_NAME, f"output_video_{task_id}.mp4"
             print("Successfully uploaded video to S3")
         except Exception as e:
             error_msg = f"Error uploading video to S3: {str(e)}"
@@ -114,7 +119,8 @@ async def process_reddit_commentary(task_id: str, url: str):
         # Step 7: Get S3 URL for the video
         print("Step 7: Getting video URL...")
         try:
-            video_url = await asyncio.to_thread(cloudflare_s3.get_s3_url, BUCKET_NAME, f"output_video_{task_id}.mp4")
+            # video_url = await asyncio.to_thread(cloudflare_s3.get_s3_url, BUCKET_NAME, f"output_video_{task_id}.mp4")
+            video_url = cloudflare_s3.get_s3_url, BUCKET_NAME, f"output_video_{task_id}.mp4"
             print(f"Successfully got video URL: {video_url}")
         except Exception as e:
             error_msg = f"Error getting video URL: {str(e)}"

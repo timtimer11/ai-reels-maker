@@ -30,26 +30,18 @@ async def process_reddit_commentary(task_id: str, url: str):
         
         # Step 1: Get Reddit content
         task_queue.update_task_status(task_id, TaskStatus.FETCHING_REDDIT_POST)
-        print("Step 1: Fetching Reddit post...")
+        print("Step 1: Fetching Reddit post and extracting data...")
         reddit_client = RedditClient()
         
         try:
-            fetched_post = await asyncio.to_thread(reddit_client.fetch_post, url)
-            print("Successfully fetched Reddit post")
+            # Single function call that handles fetching and extracting
+            post_data = await asyncio.to_thread(reddit_client.get_post_and_comments, url, top_n=5)
+            print("Successfully fetched Reddit post and extracted data")
         except Exception as e:
-            error_msg = f"Error fetching Reddit post: {str(e)}"
+            error_msg = f"Error fetching and processing Reddit post: {str(e)}"
             print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
-            raise e
-            
-        try:
-            post_data = await asyncio.to_thread(reddit_client.extract_post_data, fetched_post)
-            print("Successfully extracted post data")
-        except Exception as e:
-            error_msg = f"Error extracting post data: {str(e)}"
-            print(error_msg)
-            task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
-            raise e
+            raise e 
         
         # Step 2: Generate script
         task_queue.update_task_status(task_id, TaskStatus.GENERATING_SCRIPT)

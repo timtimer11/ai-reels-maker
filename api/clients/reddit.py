@@ -1,4 +1,6 @@
 import requests
+import base64
+import os
 from typing import Dict
 
 class RedditClient:
@@ -11,8 +13,70 @@ class RedditClient:
             'Accept': 'application/json, text/html, */*',
             'Accept-Language': 'en-US,en;q=0.9'
         }
+        # New headers for authenticated requests
+        self.auth_headers = {
+            'User-Agent': 'ai-reels-builder/1.0 by TimTimer'
+        }
+    
+    def get_reddit_access_token(self):
+        """Get Reddit API access token using client credentials"""
+        client_id = os.getenv("REDDIT_APP_CLIENT_ID")
+        client_secret = os.getenv("REDDIT_APP_SECRET_KEY")
+        
+        if not client_id or not client_secret:
+            raise Exception("Reddit API credentials not found in environment variables")
+        
+        auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+        headers = {
+            'Authorization': f'Basic {auth}',
+            'User-Agent': self.auth_headers['User-Agent']
+        }
+        data = {'grant_type': 'client_credentials'}
+        
+        response = requests.post('https://www.reddit.com/api/v1/access_token', 
+                               headers=headers, data=data)
+        
+        if response.status_code == 200:
+            return response.json()['access_token']
+        else:
+            raise Exception(f"Failed to get Reddit access token: {response.text}")
+    
+    def fetch_post_authenticated(self, url: str) -> Dict:
+        """Fetch post using Reddit API authentication"""
+        try:
+            # Get access token
+            token = self.get_reddit_access_token()
+            
+            # Convert URL to OAuth endpoint
+            if 'reddit.com' in url:
+                auth_url = url.replace('www.reddit.com', 'oauth.reddit.com')
+                if not auth_url.endswith('.json'):
+                    auth_url += '.json'
+            else:
+                raise ValueError("Invalid Reddit URL")
+            
+            # Make authenticated request
+            auth_headers = {
+                'Authorization': f'Bearer {token}',
+                'User-Agent': self.auth_headers['User-Agent']
+            }
+            
+            response = requests.get(auth_url, headers=auth_headers, timeout=10)
+            print('Authenticated response received')
+            
+        except requests.RequestException as e:
+            print(f'{e}')
+            raise Exception(f"Network error fetching Reddit post: {e}")
+        
+        if response.status_code == 200:
+            print('Authenticated response received with Status=200')
+            return response.json()
+        else:
+            print(f'Auth request failed with status: {response.status_code}')
+            raise Exception(f"Failed to fetch Reddit post with auth. Status code: {response.status_code}")
 
     def fetch_post(self, url: str) -> Dict:
+        """Original fetch method - kept unchanged"""
         try:
             url_processed = url + ".json"
             response = requests.get(url_processed, headers=self.headers, timeout=10)
@@ -27,7 +91,6 @@ class RedditClient:
         else:
             print(f'{response.status_code}')
             raise Exception(f"Failed to fetch Reddit post. Status code: {response.status_code}")
-
 
     def extract_post_data(self, data: Dict, top_n: int = 5) -> Dict:
         """
@@ -62,6 +125,49 @@ class RedditClient:
     def get_post_and_comments(self, url: str, top_n: int = 5) -> Dict:
         """
         Fetches a post and its comments from a given URL and returns the post data.
+        Uses authenticated method with fallback to original method.
         """
-        data = self.fetch_post(url)
-        return self.extract_post_data(data, top_n)
+        try:
+            # Try authenticated method first
+            data = self.fetch_post_authenticated(url)
+            return self.extract_post_data(data, top_n)
+        except Exception as e:
+            print(f"Authenticated request failed: {e}")
+            print("Falling back to original method...")
+            # Fallback to original method
+            data = self.fetch_post(url)
+            return self.extract_post_data(data, top_n)
+    
+if __name__ == "__main__":
+    # Initialize client
+    client = RedditClient()
+    
+    # Test URL
+    test_url = "https://www.reddit.com/r/YouShouldKnow/comments/1lgujap/ysk_even_if_you_feel_fine_sleeping_less_than_you/"
+    
+    try:
+        print(f"Fetching post: {test_url}")
+        print("-" * 50)
+        
+        # Get post and comments
+        result = client.get_post_and_comments(test_url, top_n=3)
+        
+        # Display results
+        print(f"TITLE: {result['title']}")
+        print("-" * 50)
+        
+        print(f"DESCRIPTION: {result['description'][:200]}...")  # First 200 chars
+        print("-" * 50)
+        
+        print("TOP COMMENTS:")
+        for i, comment in enumerate(result['top_comments'], 1):
+            print(f"{i}. [{comment['upvotes']} upvotes] {comment['comment'][:100]}...")
+        
+        print("-" * 50)
+        print("✅ Test completed successfully!")
+        
+    except Exception as e:
+        print(f"❌ Test failed with error: {e}")
+        print("Make sure your environment variables are set:")
+        print("- REDDIT_APP_CLIENT_ID")
+        print("- REDDIT_APP_SECRET_KEY")

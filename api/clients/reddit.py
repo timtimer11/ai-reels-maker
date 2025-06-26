@@ -117,11 +117,6 @@ class RedditClient:
             # Try authenticated method first
             data = self.fetch_post_authenticated(url)
             post_data = self.extract_post_data(data, top_n)
-            print('Post data extracted: ',post_data)
             return post_data
         except Exception as e:
             print(f"Authenticated request failed: {e}")
-            print("Falling back to original method...")
-            # Fallback to original method
-            data = self.fetch_post(url)
-            return self.extract_post_data(data, top_n)

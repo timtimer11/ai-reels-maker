@@ -96,31 +96,34 @@ class RedditClient:
         """
         Extracts the post data from the fetched post.
         """
-        title = data[0]["data"]["children"][0]["data"]["title"]
-        description = data[0]["data"]["children"][0]["data"]["selftext"]
+        try:
+            title = data[0]["data"]["children"][0]["data"]["title"]
+            description = data[0]["data"]["children"][0]["data"]["selftext"]
 
-        all_comments = data[1]["data"]["children"]
-        comment_list = []
+            all_comments = data[1]["data"]["children"]
+            comment_list = []
 
-        for comment in all_comments:
-            comment_data = comment.get("data", {})
-            text = comment_data.get("body", "")
-            upvotes_raw = comment_data.get("ups", 0)
+            for comment in all_comments:
+                comment_data = comment.get("data", {})
+                text = comment_data.get("body", "")
+                upvotes_raw = comment_data.get("ups", 0)
 
-            try:
-                upvotes = int(upvotes_raw)
-            except (ValueError, TypeError):
-                upvotes = 0
+                try:
+                    upvotes = int(upvotes_raw)
+                except (ValueError, TypeError):
+                    upvotes = 0
 
-            comment_list.append({"comment": text, "upvotes": upvotes})
+                comment_list.append({"comment": text, "upvotes": upvotes})
 
-        top_comments = sorted(comment_list, key=lambda x: x["upvotes"], reverse=True)[:top_n]
+            top_comments = sorted(comment_list, key=lambda x: x["upvotes"], reverse=True)[:top_n]
 
-        return {
-            "title": title,
-            "description": description,
-            "top_comments": top_comments
-        }
+            return {
+                "title": title,
+                "description": description,
+                "top_comments": top_comments
+            }
+        except Exception as e:
+            print(e)
 
     def get_post_and_comments(self, url: str, top_n: int = 5) -> Dict:
         """
@@ -130,44 +133,12 @@ class RedditClient:
         try:
             # Try authenticated method first
             data = self.fetch_post_authenticated(url)
-            return self.extract_post_data(data, top_n)
+            post_data = self.extract_post_data(data, top_n)
+            print('Post data extracted: ',post_data)
+            return post_data
         except Exception as e:
             print(f"Authenticated request failed: {e}")
             print("Falling back to original method...")
             # Fallback to original method
             data = self.fetch_post(url)
             return self.extract_post_data(data, top_n)
-    
-if __name__ == "__main__":
-    # Initialize client
-    client = RedditClient()
-    
-    # Test URL
-    test_url = "https://www.reddit.com/r/YouShouldKnow/comments/1lgujap/ysk_even_if_you_feel_fine_sleeping_less_than_you/"
-    
-    try:
-        print(f"Fetching post: {test_url}")
-        print("-" * 50)
-        
-        # Get post and comments
-        result = client.get_post_and_comments(test_url, top_n=3)
-        
-        # Display results
-        print(f"TITLE: {result['title']}")
-        print("-" * 50)
-        
-        print(f"DESCRIPTION: {result['description'][:200]}...")  # First 200 chars
-        print("-" * 50)
-        
-        print("TOP COMMENTS:")
-        for i, comment in enumerate(result['top_comments'], 1):
-            print(f"{i}. [{comment['upvotes']} upvotes] {comment['comment'][:100]}...")
-        
-        print("-" * 50)
-        print("✅ Test completed successfully!")
-        
-    except Exception as e:
-        print(f"❌ Test failed with error: {e}")
-        print("Make sure your environment variables are set:")
-        print("- REDDIT_APP_CLIENT_ID")
-        print("- REDDIT_APP_SECRET_KEY")

@@ -10,6 +10,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # Local development
         "https://ai-reels-maker.vercel.app"  # Your Vercel deployment
+        "https://ai-reels-maker-production.up.railway.app/" # Railway deployment
     ],
     allow_credentials=True, # Allows cookies and authentication
     allow_methods=["*"], # Allows all HTTP methods (GET, POST, etc.)

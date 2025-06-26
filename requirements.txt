@@ -7,3 +7,4 @@ pydantic
 boto3
 deepgram-sdk
 deepgram-captions
+ffmpeg

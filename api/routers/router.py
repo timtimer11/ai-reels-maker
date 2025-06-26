@@ -96,12 +96,6 @@ async def process_reddit_commentary(task_id: str, url: str):
             print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e
-        
-        # Save video locally
-        output_path = f"output_video_{task_id}.mp4"
-        with open(output_path, "wb") as f:
-            f.write(video_bytes)
-        print(f"Video saved to: {output_path}")
 
         # Step 6: Upload video to S3
         task_queue.update_task_status(task_id, TaskStatus.GETTING_VIDEO_URL)

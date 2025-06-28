@@ -45,9 +45,7 @@ def text_to_speech_file(text: str, voice: str = "onyx") -> bytes:
             input=text,
             instructions="Speak in a insightful and excited tone."
         )
-
-        audio_data = BytesIO(response.content)
-        return audio_data
+        return response.content
     except Exception as e:
         print(f"Error generating speech: {e}")
         raise e

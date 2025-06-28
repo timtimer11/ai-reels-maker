@@ -12,8 +12,8 @@ export default function CompletedGeneration() {
   useEffect(() => {
     const fetchVideoUrl = async () => {
       try {
-        // const response = await fetch(`https://ai-reels-maker.vercel.app/api/py/reddit/reddit-commentary/status/${taskId}`); // Vercel deployment
-        const response = await fetch(`https://ai-reels-maker-production.up.railway.app/api/py/reddit/reddit-commentary/status/${taskId}`); // Railway deployment
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
+        const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary/status/${taskId}`); // Railway deployment
         if (!response.ok) {
           throw new Error('Failed to fetch video URL');
         }

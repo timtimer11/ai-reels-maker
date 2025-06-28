@@ -1,3 +1,4 @@
+import os
 import subprocess
 import random
 from io import BytesIO
@@ -12,35 +13,45 @@ def get_audio_duration(audio_bytes: BytesIO) -> float:
     Get the duration of an audio file in seconds.
     """
     # Save the audio to a temporary file
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
         tmp.write(audio_bytes.read())
         tmp.flush()
+        tmp_path = tmp.name  # store path before closing
 
+    try:
         result = subprocess.run(
             ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-             '-of', 'default=noprint_wrappers=1:nokey=1', tmp.name],
+             '-of', 'default=noprint_wrappers=1:nokey=1', tmp_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
         )
         duration_str = result.stdout.decode().strip()
         return float(duration_str) if duration_str else 0.0
+    finally:
+        # Ensure the file is removed after we're done
+        os.remove(tmp_path)
 
 def get_video_duration(video_bytes: BytesIO) -> float:
     """
     Get the duration of a video file in seconds.
     """
     # Write BytesIO content to a temporary file
-    with tempfile.NamedTemporaryFile(delete=True, suffix=".mp4") as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
         temp_file.write(video_bytes.read())
-        temp_file.flush()  # Ensure data is written before subprocess reads it
+        temp_file.flush()
+        temp_path = temp_file.name
 
+    try:
         result = subprocess.run(
             ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-             '-of', 'default=noprint_wrappers=1:nokey=1', temp_file.name],
+             '-of', 'default=noprint_wrappers=1:nokey=1', temp_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
         )
-        return float(result.stdout)
+        duration_str = result.stdout.decode().strip()
+        return float(duration_str) if duration_str else 0.0
+    finally:
+        os.remove(temp_path)
 
 def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes:
     """
@@ -65,78 +76,83 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
     print(f"Starting at {start_time}s with {audio_duration}s segment")
 
     caption_start = time.time()
-    # Generate captions first
     captions = deepgram_service.generate_captions_with_deepgram(audio_bytes.getvalue())
-    audio_bytes.seek(0)  # Reset audio position after caption generation
+    audio_bytes.seek(0)
     print(f"Caption generation took {time.time() - caption_start:.2f} seconds")
     
-    # Convert SRT to ASS and get the content
-    ass_content = deepgram_service.convert_srt_to_ass(captions)
-    
-    # Create a temporary file for the ASS content
-    with tempfile.NamedTemporaryFile(delete=True, suffix=".ass") as ass_file:
-        # Write the ASS content to the temporary file
-        ass_file.write(ass_content.encode('utf-8'))
-        ass_file.flush()
-        
-        # Simplified ASS styling
-        with open(ass_file.name, "r", encoding="utf-8") as f:
+    ass_file_path = ""
+    temp_video_path = ""
+    temp_audio_path = ""
+
+    try:
+        ass_content = deepgram_service.convert_srt_to_ass(captions)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".ass") as ass_file:
+            ass_file.write(ass_content.encode('utf-8'))
+            ass_file.flush()
+            ass_file_path = ass_file.name
+
+        # Simplify ASS styling
+        with open(ass_file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
-        
-        with open(ass_file.name, "w", encoding="utf-8") as f:
+        with open(ass_file_path, "w", encoding="utf-8") as f:
             for line in lines:
                 if line.startswith("Style:"):
                     parts = line.strip().split(",")
-                    parts[1] = "Arial"  # Simpler font
-                    parts[2] = "13"     # Larger font size
-                    parts[5] = "&H00000000"  # Transparent outline
-                    parts[16] = "1"     # Simpler outline
-                    parts[17] = "0"     # No shadow
+                    parts[1] = "Arial"
+                    parts[2] = "13"
+                    parts[5] = "&H00000000"
+                    parts[16] = "1"
+                    parts[17] = "0"
                     line = ",".join(parts) + "\n"
                 f.write(line)
-        
-        # Process video with captions
+
         ffmpeg_start = time.time()
-        with tempfile.NamedTemporaryFile(delete=True, suffix=".mp4") as temp_video, \
-                tempfile.NamedTemporaryFile(delete=True, suffix=".wav") as temp_audio:
-            
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video, \
+             tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
+
             temp_video.write(video_bytes.read())
             temp_audio.write(audio_bytes.read())
             temp_video.flush()
             temp_audio.flush()
+            temp_video_path = temp_video.name
+            temp_audio_path = temp_audio.name
 
-            # Optimized FFmpeg command for caption processing
-            ffmpeg_process = subprocess.Popen([
-                'ffmpeg',
-                '-y',
-                '-ss', str(start_time),
-                '-i', temp_video.name,
-                '-i', temp_audio.name,
-                '-vf', f'subtitles={ass_file.name}:force_style=\'FontName=Arial,FontSize=16,Outline=1,Shadow=0\'',
-                '-t', str(audio_duration),
-                '-map', '0:v:0',
-                '-map', '1:a:0',
-                '-c:v', 'libx264',
-                '-preset', 'ultrafast',  # Faster encoding
-                '-c:a', 'aac',
-                '-b:a', '256k',  # Increased bitrate for WAV conversion
-                '-ar', '48000',
-                '-ac', '2',
-                '-shortest',
-                '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
-                '-f', 'mp4',
-                'pipe:1'
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            
-            output, stderr = ffmpeg_process.communicate()
-            
-            if ffmpeg_process.returncode != 0:
-                print(f"FFmpeg failed: {stderr.decode()}")
-                raise RuntimeError(f"FFmpeg failed: {stderr.decode()}")
-                
-            if not output:
-                print("FFmpeg produced empty output")
-                raise RuntimeError("FFmpeg produced empty output")
+        ffmpeg_process = subprocess.Popen([
+            'ffmpeg',
+            '-y',
+            '-ss', str(start_time),
+            '-i', temp_video_path,
+            '-i', temp_audio_path,
+            '-vf', f"subtitles={ass_file_path}:force_style='FontName=Arial,FontSize=16,Outline=1,Shadow=0'",
+            '-t', str(audio_duration),
+            '-map', '0:v:0',
+            '-map', '1:a:0',
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
+            '-c:a', 'aac',
+            '-b:a', '256k',
+            '-ar', '48000',
+            '-ac', '2',
+            '-shortest',
+            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+            '-f', 'mp4',
+            'pipe:1'
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
-            return output
+        output, stderr = ffmpeg_process.communicate()
+
+        if ffmpeg_process.returncode != 0:
+            print(f"FFmpeg failed: {stderr.decode()}")
+            raise RuntimeError(f"FFmpeg failed: {stderr.decode()}")
+
+        if not output:
+            print("FFmpeg produced empty output")
+            raise RuntimeError("FFmpeg produced empty output")
+
+        print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
+        return output
+
+    finally:
+        for path in [ass_file_path, temp_video_path, temp_audio_path]:
+            if path and os.path.exists(path):
+                os.remove(path)

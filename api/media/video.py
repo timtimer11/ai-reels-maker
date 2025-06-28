@@ -110,7 +110,9 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video, \
              tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
 
-            temp_video.write(video_bytes.read())
+            audio_bytes.seek(0)
+            video_bytes.seek(0)
+            temp_video.write(video_bytes.read())            
             temp_audio.write(audio_bytes.read())
             temp_video.flush()
             temp_audio.flush()

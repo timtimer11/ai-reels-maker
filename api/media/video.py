@@ -72,6 +72,8 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
 
     # Calculate random start time
     max_start_time = video_duration - audio_duration
+    print('The audio duration is ',audio_duration)
+    print('The video duration is ',video_duration)
     start_time = round(random.uniform(0, max_start_time), 2)
     print(f"Starting at {start_time}s with {audio_duration}s segment")
 

@@ -12,21 +12,40 @@ def get_audio_duration(audio_bytes: BytesIO) -> float:
     """
     Get the duration of an audio file in seconds.
     """
+    # Debug: Check what we're actually getting
+    audio_bytes.seek(0)
+    first_bytes = audio_bytes.read(20)
+    print(f"Audio file starts with: {first_bytes}")
+    print(f"Audio file first 20 bytes as hex: {first_bytes.hex()}")
+    audio_bytes.seek(0)  # Reset position
+    
     # Save the audio to a temporary file
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(audio_bytes.read())
+        audio_data = audio_bytes.read()
+        print(f"Total audio bytes: {len(audio_data)}")
+        tmp.write(audio_data)
         tmp.flush()
         tmp_path = tmp.name  # store path before closing
 
     try:
+        # Add more verbose error handling
         result = subprocess.run(
             ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
              '-of', 'default=noprint_wrappers=1:nokey=1', tmp_path],
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            stderr=subprocess.PIPE  # Separate stderr to see errors
         )
+        
+        print(f"FFprobe return code: {result.returncode}")
+        if result.stderr:
+            print(f"FFprobe stderr: {result.stderr.decode()}")
+        
         duration_str = result.stdout.decode().strip()
+        print(f"Duration string from ffprobe: '{duration_str}'")
         return float(duration_str) if duration_str else 0.0
+    except Exception as e:
+        print(f"Exception in get_audio_duration: {e}")
+        return 0.0
     finally:
         # Ensure the file is removed after we're done
         os.remove(tmp_path)
@@ -53,27 +72,6 @@ def get_video_duration(video_bytes: BytesIO) -> float:
     finally:
         os.remove(temp_path)
 
-def normalize_wav(input_bytes: bytes, sr: int = 48000, channels: int = 1) -> BytesIO:
-    """
-    Re‑encode any audio into a standard PCM WAV (s16le) at given sample rate & channels.
-    """
-    proc = subprocess.run([
-        "ffmpeg",
-        "-y",                # overwrite
-        "-i", "pipe:0",      # read from stdin
-        "-ar", str(sr),      # set sample rate
-        "-ac", str(channels),# set channel count
-        "-f", "wav",         # output WAV
-        "pipe:1"             # write to stdout
-    ], input=input_bytes, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    
-    if proc.returncode != 0:
-        raise RuntimeError(f"Audio normalization failed:\n{proc.stderr.decode()}")
-    
-    buf = BytesIO(proc.stdout)
-    buf.seek(0)
-    return buf
-
 
 def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes:
     """
@@ -81,11 +79,7 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
     """
     start_time = time.time()
     print("Starting video processing pipeline")
-
-    # rewind and normalize
-    video_bytes.seek(0)
-    audio_bytes = normalize_wav(audio_bytes.getvalue(), sr=48000, channels=1)
-
+    
     # Get video duration
     video_duration = get_video_duration(video_bytes)
     audio_duration = get_audio_duration(audio_bytes)

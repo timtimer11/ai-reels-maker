@@ -118,7 +118,7 @@ class DeepgramService:
     #         print(f"Error converting SRT to ASS: {e}")
     #         raise e
 
-    def generate_captions_with_deepgram(self, AUDIO_FILE: BytesIO) -> str:
+    def generate_captions_with_deepgram(self, AUDIO_FILE: bytes) -> str:
         """
         Generate captions with Deepgram.
         """

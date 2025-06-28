@@ -19,8 +19,8 @@ export default function Home() {
       setStatus("");
       setError("");
 
-      // const response = await fetch("https://ai-reels-maker.vercel.app/api/py/reddit/reddit-commentary?url=" + encodeURIComponent(redditUrl), { // Vercel deployment
-      const response = await fetch("https://ai-reels-maker-production.up.railway.app/api/py/reddit/reddit-commentary?url=" + encodeURIComponent(redditUrl), { // Railway deployment
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
+      const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary?url=` + encodeURIComponent(redditUrl), { // Railway deployment
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

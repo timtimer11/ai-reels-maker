@@ -53,13 +53,39 @@ def get_video_duration(video_bytes: BytesIO) -> float:
     finally:
         os.remove(temp_path)
 
+def normalize_wav(input_bytes: bytes, sr: int = 48000, channels: int = 1) -> BytesIO:
+    """
+    Re‑encode any audio into a standard PCM WAV (s16le) at given sample rate & channels.
+    """
+    proc = subprocess.run([
+        "ffmpeg",
+        "-y",                # overwrite
+        "-i", "pipe:0",      # read from stdin
+        "-ar", str(sr),      # set sample rate
+        "-ac", str(channels),# set channel count
+        "-f", "wav",         # output WAV
+        "pipe:1"             # write to stdout
+    ], input=input_bytes, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    if proc.returncode != 0:
+        raise RuntimeError(f"Audio normalization failed:\n{proc.stderr.decode()}")
+    
+    buf = BytesIO(proc.stdout)
+    buf.seek(0)
+    return buf
+
+
 def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes:
     """
     Combines video with audio file using streaming pipeline
     """
     start_time = time.time()
     print("Starting video processing pipeline")
-    
+
+    # rewind and normalize
+    video_bytes.seek(0)
+    audio_bytes = normalize_wav(audio_bytes.getvalue(), sr=48000, channels=1)
+
     # Get video duration
     video_duration = get_video_duration(video_bytes)
     audio_duration = get_audio_duration(audio_bytes)

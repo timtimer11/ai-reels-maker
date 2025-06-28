@@ -98,12 +98,14 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
             for line in lines:
                 if line.startswith("Style:"):
                     parts = line.strip().split(",")
-                    parts[1] = "Arial"
-                    parts[2] = "13"
-                    parts[5] = "&H00000000"
-                    parts[16] = "1"
-                    parts[17] = "0"
-                    line = ",".join(parts) + "\n"
+                    if len(parts) >= 18:
+                        parts[1] = "Arial"
+                        parts[2] = "13"
+                        parts[5] = "&H00000000"
+                        parts[16] = "1"
+                        parts[17] = "0"
+                        line = ",".join(parts) + "\n"
+                    # else: skip or leave unmodified
                 f.write(line)
 
         ffmpeg_start = time.time()

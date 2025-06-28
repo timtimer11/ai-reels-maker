@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import router
+from routers import router
 
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 frontend_host_url = os.getenv("FRONTEND_HOST_URL")

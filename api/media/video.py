@@ -3,7 +3,7 @@ import random
 from io import BytesIO
 import tempfile
 import time
-from ..clients.deepgram import DeepgramService
+from clients.deepgram import DeepgramService
 
 deepgram_service = DeepgramService()
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from clients.openai import generate_commentary_script, text_to_speech_file
-from clients.deepgram import generate_audio_with_deepgram
+from clients.deepgram import DeepgramService
 from storage.cloudflare_s3 import CloudflareS3
 from media.video import process_video_streaming
 from utils.task_queue import task_queue, TaskStatus
@@ -14,6 +14,7 @@ router = APIRouter()
 BUCKET_NAME = os.environ.get('CLOUDFLARE_TTS_BUCKET_NAME')
 
 cloudflare_s3 = CloudflareS3()
+deepgram_service = DeepgramService()
 
 @router.post("/reddit-commentary")
 async def start_reddit_commentary(url: str):
@@ -64,7 +65,7 @@ async def process_reddit_commentary(task_id: str, url: str):
         print("Step 3: Generating voiceover...")
         try:
             # audio_speech = await asyncio.to_thread(text_to_speech_file, script)
-            audio_speech = generate_audio_with_deepgram(script)
+            audio_speech = deepgram_service.generate_audio_with_deepgram(script)
             cloudflare_s3.upload_file_to_s3(audio_speech, BUCKET_NAME, f"output_audio_{task_id}.mp3")
             print("Successfully generated voiceover and uploaded to S3")
         except Exception as e:

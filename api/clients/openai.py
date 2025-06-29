@@ -23,7 +23,7 @@ def generate_commentary_script(title: str, description: str) -> str:
         • Payoff: 1–2 sentences delivering a satisfying conclusion.
         • Start with something like: "Did you know", or catchy line
 
-        Make sure that the text is not too long and not too short. The video is from 15 to 30 seconds.
+        Make sure that the text is not too long and not too short. The video is from 15 to 20 seconds. Make sure the captions do not exceed the video duration.
     """
     print('generating commentary script with openai api')
     openai_response = openai_client.responses.create(
@@ -39,6 +39,7 @@ def text_to_speech_file(text: str, voice: str = "onyx") -> bytes:
         response = openai_client.audio.speech.create(
             model="gpt-4o-mini-tts",
             voice=voice,
+            speed=3,
             response_format='wav',
             input=text,
             instructions="Speak in a insightful and excited tone."

@@ -11,7 +11,7 @@ class DeepgramService:
     """
     def __init__(self):
         self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
-        self.options = SpeakOptions(model='aura-2-thalia-en')
+        self.options = SpeakOptions(model='aura-2-thalia-en',encoding='linear16')
 
     def generate_audio_with_deepgram(self, input_text: str) -> bytes:
         """

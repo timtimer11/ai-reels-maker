@@ -83,7 +83,7 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
 
         # Generate captions from the exact same audio_data
         caption_start = time.time()
-        captions = deepgram_service.generate_captions_with_deepgram(audio_data)
+        captions = deepgram_service.generate_captions_with_deepgram(temp_audio_path)
 
         print(f"Caption generation took {time.time() - caption_start:.2f} seconds")
 

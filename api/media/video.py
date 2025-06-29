@@ -44,7 +44,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
     """
     Combines video with audio file using streaming pipeline
     """
-    start_time = time.time()
+    pipeline_start_time = time.time()
     print("Starting video processing pipeline")
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -77,7 +77,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
         # 4) Duration checks
         video_duration = get_video_duration(temp_video_path)
         audio_duration = get_audio_duration(temp_audio_path)
-        print(f"Duration calculation took {time.time() - start_time:.2f} seconds")
+        print(f"Duration calculation took {time.time() - pipeline_start_time:.2f} seconds")
         if audio_duration >= video_duration:
             raise ValueError(f"Audio duration ({audio_duration}s) >= video duration ({video_duration}s)")
 
@@ -85,8 +85,8 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
         max_start_time = video_duration - audio_duration
         print("The audio duration is ", audio_duration)
         print("The video duration is ", video_duration)
-        start_time = round(random.uniform(0, max_start_time), 2)
-        print(f"Starting at {start_time}s with {audio_duration}s segment")
+        video_start_time = round(random.uniform(0, max_start_time), 2)
+        print(f"Starting at {video_start_time}s with {audio_duration}s segment")
 
         # 6) Generate captions
         caption_start = time.time()
@@ -116,41 +116,80 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
                         line = ",".join(parts) + "\n"
                 f.write(line)
 
-        # 9) Final FFmpeg mux with subtitles
+        # 9) Final FFmpeg mux with subtitles - improved command to avoid hanging
         ffmpeg_start = time.time()
-        ffmpeg_process = subprocess.Popen([
-            'ffmpeg',
-            '-y',
-            '-i', temp_video_path,
-            '-i', temp_audio_path,
-            '-vf', f"subtitles={ass_file_path}:force_style='FontName=Arial,FontSize=16,Outline=1,Shadow=0'",
-            '-ss', str(start_time),               # <-- move here
-            '-t', str(audio_duration),
-            '-map', '0:v:0',
-            '-map', '1:a:0',
-            '-c:v', 'libx264',
-            '-preset', 'ultrafast',
-            '-c:a', 'aac',
-            '-b:a', '256k',
-            '-ar', '48000',
-            '-ac', '2',
-            '-shortest',
-            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
-            '-f', 'mp4',
-            'pipe:1'
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # First, try without subtitles to see if the basic muxing works
+        try:
+            ffmpeg_process = subprocess.Popen([
+                'ffmpeg',
+                '-y',
+                '-ss', str(video_start_time),  # Seek before input for faster seeking
+                '-i', temp_video_path,
+                '-i', temp_audio_path,
+                '-t', str(audio_duration),
+                '-map', '0:v:0',
+                '-map', '1:a:0',
+                '-c:v', 'libx264',
+                '-preset', 'ultrafast',
+                '-c:a', 'aac',
+                '-b:a', '256k',
+                '-ar', '48000',
+                '-ac', '2',
+                '-shortest',
+                '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+                '-f', 'mp4',
+                'pipe:1'
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        output, stderr = ffmpeg_process.communicate()
-        if ffmpeg_process.returncode != 0:
-            print(f"FFmpeg failed: {stderr.decode()}")
-            raise RuntimeError(f"FFmpeg failed: {stderr.decode()}")
+            output, stderr = ffmpeg_process.communicate()
+            if ffmpeg_process.returncode != 0:
+                print(f"Basic FFmpeg failed: {stderr.decode()}")
+                raise RuntimeError(f"Basic FFmpeg failed: {stderr.decode()}")
 
-        if not output:
-            print("FFmpeg produced empty output")
-            raise RuntimeError("FFmpeg produced empty output")
+            if not output:
+                print("FFmpeg produced empty output")
+                raise RuntimeError("FFmpeg produced empty output")
 
-        print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
-        return output
+            print(f"Basic FFmpeg processing took {time.time() - ffmpeg_start:.2f} seconds")
+            return output
+            
+        except Exception as e:
+            print(f"Basic FFmpeg failed, trying with subtitles: {e}")
+            
+            ffmpeg_process = subprocess.Popen([
+                'ffmpeg',
+                '-y',
+                '-ss', str(video_start_time),
+                '-i', temp_video_path,
+                '-i', temp_audio_path,
+                '-vf', f"subtitles={ass_file_path}",
+                '-t', str(audio_duration),
+                '-map', '0:v:0',
+                '-map', '1:a:0',
+                '-c:v', 'libx264',
+                '-preset', 'ultrafast',
+                '-c:a', 'aac',
+                '-b:a', '256k',
+                '-ar', '48000',
+                '-ac', '2',
+                '-shortest',
+                '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+                '-f', 'mp4',
+                'pipe:1'
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            output, stderr = ffmpeg_process.communicate()
+            if ffmpeg_process.returncode != 0:
+                print(f"FFmpeg with subtitles failed: {stderr.decode()}")
+                raise RuntimeError(f"FFmpeg with subtitles failed: {stderr.decode()}")
+
+            if not output:
+                print("FFmpeg produced empty output")
+                raise RuntimeError("FFmpeg produced empty output")
+
+            print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
+            return output
 
 
 

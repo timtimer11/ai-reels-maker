@@ -49,51 +49,58 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Centralize file creation
-        temp_audio_path = os.path.join(tmpdir, "audio.wav")
-        temp_video_path = os.path.join(tmpdir, "video.mp4")
-        srt_file_path = os.path.join(tmpdir, "captions.srt")
-        ass_file_path = os.path.join(tmpdir, "subtitles.ass")
+        temp_audio_raw   = os.path.join(tmpdir, "audio_raw.wav")
+        temp_audio_path  = os.path.join(tmpdir, "audio.wav")      # normalized
+        temp_video_path  = os.path.join(tmpdir, "video.mp4")
+        srt_file_path    = os.path.join(tmpdir, "captions.srt")
+        ass_file_path    = os.path.join(tmpdir, "subtitles.ass")
 
-        # Read audio bytes once
-        audio_data = audio_bytes
+        # 1) Write raw audio bytes
+        with open(temp_audio_raw, "wb") as f:
+            f.write(audio_bytes)
 
-        # Write audio_data to temp file
-        with open(temp_audio_path, "wb") as f:
-            f.write(audio_data)
+        # 2) Normalize to 48kHz stereo PCM16 WAV
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-i", temp_audio_raw,
+            "-ar", "48000",
+            "-ac", "2",
+            "-c:a", "pcm_s16le",
+            temp_audio_path
+        ], check=True)
 
+        # 3) Write video bytes
         video_bytes.seek(0)
         with open(temp_video_path, "wb") as f:
             f.write(video_bytes.read())
 
-        # Use centralized files for duration check
+        # 4) Duration checks
         video_duration = get_video_duration(temp_video_path)
         audio_duration = get_audio_duration(temp_audio_path)
-
         print(f"Duration calculation took {time.time() - start_time:.2f} seconds")
         if audio_duration >= video_duration:
             raise ValueError(f"Audio duration ({audio_duration}s) >= video duration ({video_duration}s)")
 
-        # Calculate random start time
+        # 5) Random start time
         max_start_time = video_duration - audio_duration
-        print('The audio duration is ', audio_duration)
-        print('The video duration is ', video_duration)
+        print("The audio duration is ", audio_duration)
+        print("The video duration is ", video_duration)
         start_time = round(random.uniform(0, max_start_time), 2)
         print(f"Starting at {start_time}s with {audio_duration}s segment")
 
-        # Generate captions from the exact same audio_data
+        # 6) Generate captions
         caption_start = time.time()
         captions = deepgram_service.generate_captions_with_deepgram(temp_audio_path)
-
         print(f"Caption generation took {time.time() - caption_start:.2f} seconds")
 
-        # Convert captions to ASS
+        # 7) Convert captions to ASS
         deepgram_service.convert_srt_to_ass(
             srt_captions=captions,
             srt_file_path=srt_file_path,
             ass_file_path=ass_file_path
         )
 
-        # Simplify ASS styling
+        # 8) Simplify ASS styling
         with open(ass_file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
         with open(ass_file_path, "w", encoding="utf-8") as f:
@@ -109,7 +116,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
                         line = ",".join(parts) + "\n"
                 f.write(line)
 
-        # Run FFmpeg
+        # 9) Final FFmpeg mux with subtitles
         ffmpeg_start = time.time()
         ffmpeg_process = subprocess.Popen([
             'ffmpeg',
@@ -134,7 +141,6 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         output, stderr = ffmpeg_process.communicate()
-
         if ffmpeg_process.returncode != 0:
             print(f"FFmpeg failed: {stderr.decode()}")
             raise RuntimeError(f"FFmpeg failed: {stderr.decode()}")
@@ -145,5 +151,6 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
 
         print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
         return output
+
 
 

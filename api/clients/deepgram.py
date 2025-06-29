@@ -1,7 +1,6 @@
 from deepgram import DeepgramClient, SpeakOptions, PrerecordedOptions
 from deepgram_captions import DeepgramConverter, srt
 import os
-from io import BytesIO
 import subprocess
 
 DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
@@ -16,7 +15,7 @@ class DeepgramService:
 
     def generate_audio_with_deepgram(self, input_text: str) -> bytes:
         """
-        Generate audio with Deepgram.
+        Generate audio with Deepgram and return raw bytes.
         """
         try:
             # Create the request body as shown in documentation
@@ -29,23 +28,18 @@ class DeepgramService:
                 self.options
             )
             
-            # Create a BytesIO object to store the audio data
-            audio_data = BytesIO()
-            
-            # Write all bytes from the response to our BytesIO object
+            # Collect all chunks into a single bytes object
+            chunks = []
             for data in response.iter_bytes():
-                audio_data.write(data)
-                
-            # Reset the pointer to the beginning of the BytesIO object
-            audio_data.seek(0)
-            
-            # Close the response
+                chunks.append(data)
             response.close()
             
-            return audio_data
+            audio_bytes = b"".join(chunks)
+            return audio_bytes
+
         except Exception as e:
             print(f"Error generating speech: {e}")
-            raise e
+            raise
 
     def generate_captions_with_deepgram(self, audio_file_path: str) -> str:
         """

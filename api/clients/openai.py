@@ -39,7 +39,6 @@ def text_to_speech_file(text: str, voice: str = "onyx") -> BytesIO:
         response = openai_client.audio.speech.create(
             model="gpt-4o-mini-tts",
             voice=voice,
-            speed=3,
             # response_format='mp3',
             response_format='wav',
             input=text,

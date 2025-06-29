@@ -33,20 +33,18 @@ def generate_commentary_script(title: str, description: str) -> str:
     print('done on commentary script with openai api')
     return openai_response.output_text
 
-def text_to_speech_file(text: str, voice: str = "onyx") -> BytesIO:
+def text_to_speech_file(text: str, voice: str = "onyx") -> bytes:
     try:
         # Generate speech using OpenAI TTS API
         response = openai_client.audio.speech.create(
             model="gpt-4o-mini-tts",
             voice=voice,
-            # response_format='mp3',
             response_format='wav',
             input=text,
             instructions="Speak in a insightful and excited tone."
         )
 
-        audio_data = BytesIO(response.content)
-        return audio_data
+        return response.content
     except Exception as e:
         print(f"Error generating speech: {e}")
         raise e

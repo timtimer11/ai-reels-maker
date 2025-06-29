@@ -40,7 +40,7 @@ def get_video_duration(file_path: str) -> float:
         return 0.0
 
 
-def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes:
+def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
     """
     Combines video with audio file using streaming pipeline
     """
@@ -55,8 +55,7 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
         ass_file_path = os.path.join(tmpdir, "subtitles.ass")
 
         # Read audio bytes once
-        audio_bytes.seek(0)
-        audio_data = audio_bytes.read()
+        audio_data = audio_bytes
 
         # Write audio_data to temp file
         with open(temp_audio_path, "wb") as f:

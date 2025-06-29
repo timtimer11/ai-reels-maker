@@ -121,10 +121,10 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
         ffmpeg_process = subprocess.Popen([
             'ffmpeg',
             '-y',
-            '-ss', str(start_time),
             '-i', temp_video_path,
             '-i', temp_audio_path,
             '-vf', f"subtitles={ass_file_path}:force_style='FontName=Arial,FontSize=16,Outline=1,Shadow=0'",
+            '-ss', str(start_time),               # <-- move here
             '-t', str(audio_duration),
             '-map', '0:v:0',
             '-map', '1:a:0',

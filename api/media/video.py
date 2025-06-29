@@ -8,69 +8,36 @@ from clients.deepgram import DeepgramService
 
 deepgram_service = DeepgramService()
 
-def get_audio_duration(audio_bytes: BytesIO) -> float:
-    """
-    Get the duration of an audio file in seconds.
-    """
-    # Debug: Check what we're actually getting
-    audio_bytes.seek(0)
-    first_bytes = audio_bytes.read(20)
-    print(f"Audio file starts with: {first_bytes}")
-    print(f"Audio file first 20 bytes as hex: {first_bytes.hex()}")
-    audio_bytes.seek(0)  # Reset position
-    
-    # Save the audio to a temporary file
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        audio_data = audio_bytes.read()
-        print(f"Total audio bytes: {len(audio_data)}")
-        tmp.write(audio_data)
-        tmp.flush()
-        tmp_path = tmp.name  # store path before closing
-
+def get_audio_duration(file_path: str) -> float:
     try:
-        # Add more verbose error handling
         result = subprocess.run(
             ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-             '-of', 'default=noprint_wrappers=1:nokey=1', tmp_path],
+             '-of', 'default=noprint_wrappers=1:nokey=1', file_path],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE  # Separate stderr to see errors
+            stderr=subprocess.PIPE
         )
-        
-        print(f"FFprobe return code: {result.returncode}")
         if result.stderr:
             print(f"FFprobe stderr: {result.stderr.decode()}")
-        
         duration_str = result.stdout.decode().strip()
-        print(f"Duration string from ffprobe: '{duration_str}'")
         return float(duration_str) if duration_str else 0.0
     except Exception as e:
         print(f"Exception in get_audio_duration: {e}")
         return 0.0
-    finally:
-        # Ensure the file is removed after we're done
-        os.remove(tmp_path)
 
-def get_video_duration(video_bytes: BytesIO) -> float:
-    """
-    Get the duration of a video file in seconds.
-    """
-    # Write BytesIO content to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
-        temp_file.write(video_bytes.read())
-        temp_file.flush()
-        temp_path = temp_file.name
 
+def get_video_duration(file_path: str) -> float:
     try:
         result = subprocess.run(
             ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-             '-of', 'default=noprint_wrappers=1:nokey=1', temp_path],
+             '-of', 'default=noprint_wrappers=1:nokey=1', file_path],
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            stderr=subprocess.PIPE
         )
         duration_str = result.stdout.decode().strip()
         return float(duration_str) if duration_str else 0.0
-    finally:
-        os.remove(temp_path)
+    except Exception as e:
+        print(f"Exception in get_video_duration: {e}")
+        return 0.0
 
 
 def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes:
@@ -79,39 +46,49 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
     """
     start_time = time.time()
     print("Starting video processing pipeline")
-    
-    # Get video duration
-    video_duration = get_video_duration(video_bytes)
-    audio_duration = get_audio_duration(audio_bytes)
-    video_bytes.seek(0)
-    audio_bytes.seek(0)
-    print(f"Duration calculation took {time.time() - start_time:.2f} seconds")
-    
-    if audio_duration >= video_duration:
-        raise ValueError(f"Audio duration ({audio_duration}s) >= video duration ({video_duration}s)")
 
-    # Calculate random start time
-    max_start_time = video_duration - audio_duration
-    print('The audio duration is ',audio_duration)
-    print('The video duration is ',video_duration)
-    start_time = round(random.uniform(0, max_start_time), 2)
-    print(f"Starting at {start_time}s with {audio_duration}s segment")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Centralize file creation
+        temp_audio_path = os.path.join(tmpdir, "audio.wav")
+        temp_video_path = os.path.join(tmpdir, "video.mp4")
+        srt_file_path = os.path.join(tmpdir, "captions.srt")
+        ass_file_path = os.path.join(tmpdir, "subtitles.ass")
 
-    caption_start = time.time()
-    captions = deepgram_service.generate_captions_with_deepgram(audio_bytes.getvalue())
-    audio_bytes.seek(0)
-    print(f"Caption generation took {time.time() - caption_start:.2f} seconds")
-    
-    ass_file_path = ""
-    temp_video_path = ""
-    temp_audio_path = ""
+        # Write input bytes to files
+        audio_bytes.seek(0)
+        with open(temp_audio_path, "wb") as f:
+            f.write(audio_bytes.read())
 
-    try:
-        ass_content = deepgram_service.convert_srt_to_ass(captions)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".ass") as ass_file:
-            ass_file.write(ass_content.encode('utf-8'))
-            ass_file.flush()
-            ass_file_path = ass_file.name
+        video_bytes.seek(0)
+        with open(temp_video_path, "wb") as f:
+            f.write(video_bytes.read())
+
+        # Use centralized files for duration check
+        video_duration = get_video_duration(temp_video_path)
+        audio_duration = get_audio_duration(temp_audio_path)
+
+        print(f"Duration calculation took {time.time() - start_time:.2f} seconds")
+        if audio_duration >= video_duration:
+            raise ValueError(f"Audio duration ({audio_duration}s) >= video duration ({video_duration}s)")
+
+        # Calculate random start time
+        max_start_time = video_duration - audio_duration
+        print('The audio duration is ', audio_duration)
+        print('The video duration is ', video_duration)
+        start_time = round(random.uniform(0, max_start_time), 2)
+        print(f"Starting at {start_time}s with {audio_duration}s segment")
+
+        # Generate captions
+        caption_start = time.time()
+        captions = deepgram_service.generate_captions_with_deepgram(temp_audio_path)
+        print(f"Caption generation took {time.time() - caption_start:.2f} seconds")
+
+        # Convert captions to ASS
+        deepgram_service.convert_srt_to_ass(
+            srt_captions=captions,
+            srt_file_path=srt_file_path,
+            ass_file_path=ass_file_path
+        )
 
         # Simplify ASS styling
         with open(ass_file_path, "r", encoding="utf-8") as f:
@@ -127,22 +104,10 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
                         parts[16] = "1"
                         parts[17] = "0"
                         line = ",".join(parts) + "\n"
-                    # else: skip or leave unmodified
                 f.write(line)
 
+        # Run FFmpeg
         ffmpeg_start = time.time()
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video, \
-             tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
-
-            audio_bytes.seek(0)
-            video_bytes.seek(0)
-            temp_video.write(video_bytes.read())            
-            temp_audio.write(audio_bytes.read())
-            temp_video.flush()
-            temp_audio.flush()
-            temp_video_path = temp_video.name
-            temp_audio_path = temp_audio.name
-
         ffmpeg_process = subprocess.Popen([
             'ffmpeg',
             '-y',
@@ -178,7 +143,4 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
         print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
         return output
 
-    finally:
-        for path in [ass_file_path, temp_video_path, temp_audio_path]:
-            if path and os.path.exists(path):
-                os.remove(path)
+

@@ -54,10 +54,13 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
         srt_file_path = os.path.join(tmpdir, "captions.srt")
         ass_file_path = os.path.join(tmpdir, "subtitles.ass")
 
-        # Write input bytes to files
+        # Read audio bytes once
         audio_bytes.seek(0)
+        audio_data = audio_bytes.read()
+
+        # Write audio_data to temp file
         with open(temp_audio_path, "wb") as f:
-            f.write(audio_bytes.read())
+            f.write(audio_data)
 
         video_bytes.seek(0)
         with open(temp_video_path, "wb") as f:
@@ -78,9 +81,10 @@ def process_video_streaming(audio_bytes: BytesIO, video_bytes: BytesIO) -> bytes
         start_time = round(random.uniform(0, max_start_time), 2)
         print(f"Starting at {start_time}s with {audio_duration}s segment")
 
-        # Generate captions
+        # Generate captions from the exact same audio_data
         caption_start = time.time()
-        captions = deepgram_service.generate_captions_with_deepgram(temp_audio_path)
+        captions = deepgram_service.generate_captions_with_deepgram(audio_data)
+
         print(f"Caption generation took {time.time() - caption_start:.2f} seconds")
 
         # Convert captions to ASS

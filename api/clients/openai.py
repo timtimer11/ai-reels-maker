@@ -46,6 +46,10 @@ def text_to_speech_file(text: str, voice: str = "onyx") -> BytesIO:
             instructions="Speak in a insightful and excited tone."
         )
 
+        # --- ADD THIS SINGLE LINE ---
+        if not response.content or len(response.content) < 12 or response.content[0:4] != b'RIFF' or response.content[8:12] != b'WAVE': raise ValueError(f"OpenAI TTS returned invalid/empty WAV (len: {len(response.content)}), first 20 bytes: {response.content[:20].hex()}")
+        # --------------------------
+
         audio_data = BytesIO(response.content)
         return audio_data
     except Exception as e:

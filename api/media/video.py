@@ -191,7 +191,6 @@
 #             print(f"FFmpeg processing with captions took {time.time() - ffmpeg_start:.2f} seconds")
 #             return output
 
-
 import os
 import subprocess
 import tempfile
@@ -202,29 +201,23 @@ from clients.deepgram import DeepgramService
 deepgram_service = DeepgramService()
 
 def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
+    """
+    Combines video with audio, returns MP4 bytes.
+    """
     with tempfile.TemporaryDirectory() as tmpdir:
-        # write inputs
+        # Write inputs
         v_path = os.path.join(tmpdir, "in.mp4")
         a_path = os.path.join(tmpdir, "in.wav")
         out_path = os.path.join(tmpdir, "out.mp4")
 
+        video_bytes.seek(0)
         with open(v_path, "wb") as f:
             f.write(video_bytes.read())
 
         with open(a_path, "wb") as f:
             f.write(audio_bytes)
 
-        # normalize audio (optional—skip if already WAV/48k)
-        subprocess.run([
-            "ffmpeg", "-y",
-            "-i", a_path,
-            "-ar", "48000",
-            "-ac", "2",
-            "-c:a", "pcm_s16le",
-            a_path
-        ], check=True)
-
-        # simple mux: copy video, re‑encode audio to AAC, stop at shortest stream
+        # Mux: copy video, encode audio to AAC, end at shorter stream
         subprocess.run([
             "ffmpeg", "-y",
             "-i", v_path,
@@ -236,6 +229,6 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
             out_path
         ], check=True)
 
-        # read back and return
+        # Read and return bytes
         with open(out_path, "rb") as f:
             return f.read()

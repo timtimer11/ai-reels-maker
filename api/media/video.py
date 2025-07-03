@@ -47,7 +47,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
 
         # Load clips
         audio_clip = AudioFileClip(audio_path)
-        video_clip = VideoFileClip(video_path).set_audio(audio_clip)
+        video_clip = VideoFileClip(video_path).with_audio(audio_clip)
 
         # Generate and write captions (SRT)
         srt_content = deepgram_service.generate_captions_with_deepgram(audio_path)

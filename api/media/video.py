@@ -100,7 +100,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
             '-y',  # Overwrite output
             '-i', video_path,
             '-i', audio_path,
-            '-vf', f"subtitles='{srt_path}':force_style='Fontsize=24'",  # Burn subtitles
+            '-vf', f"subtitles='{srt_path}':force_style='Fontsize=18'",  # Burn subtitles
             '-c:v', 'libx264',  # Video codec
             '-preset', 'veryfast',
             '-c:a', 'aac',  # Audio codec

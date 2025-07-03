@@ -63,9 +63,7 @@ class DeepgramService:
                     source,
                     options
                 )
-            print('Deepgram raw response: ', response)
             transcription = DeepgramConverter(response)
-            print("Deepgram transcription: ", transcription)
             return srt(transcription)
 
         except Exception as e:

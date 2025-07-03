@@ -47,12 +47,15 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
 
         # Load clips
         audio_clip = AudioFileClip(audio_path)
+        print("Loaded audio clip")
         video_clip = VideoFileClip(video_path).with_audio(audio_clip)
-
+        print("Combined audio and video clips")
         # Generate and write captions (SRT)
         srt_content = deepgram_service.generate_captions_with_deepgram(audio_path)
         with open(srt_path, "w", encoding="utf-8") as f:
             f.write(srt_content)
+        
+        print('Generated captions with Deepgram')
 
         # Create subtitles overlay
         subtitles = SubtitlesClip(
@@ -60,9 +63,12 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
             make_textclip=subtitle_generator,
             encoding='utf-8'
         )
+        print('Created subtitles overlay')
 
         # Compose final clip
         final = CompositeVideoClip([video_clip, subtitles])
+
+        print('Composed a final clip')
 
         # Export
         final.write_videofile(
@@ -75,7 +81,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
             logger=None,
             write_logfile=False,
         )
-        
+        print('Wrote final video file')
         # Close clips to free resources and avoid broken pipes
         final.close()
         video_clip.close()

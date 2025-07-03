@@ -5,17 +5,20 @@ import { NextRequest, NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(['/generate-video(.*)','/completed-generation(.*)'])
 
-const redis = Redis.fromEnv();
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 const ratelimit = new Ratelimit({
     redis: redis,
-    limiter: Ratelimit.slidingWindow(3, "86400 s"),
+    limiter: Ratelimit.slidingWindow(1, "86400 s"),
     ephemeralCache: new Map(),
     analytics: true,
   });
 
 const isAPI = (path: string) => {
-    return path.startsWith("/api/py/reddit/reddit-commentary?url=")
+    return path.startsWith("/api/py/reddit/reddit-commentary")
 }
 
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {

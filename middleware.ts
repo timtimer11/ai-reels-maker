@@ -19,7 +19,7 @@ const ratelimit = new Ratelimit({
   });
 
 const isAPI = (path: string) => {
-    return path.startsWith(`${backendUrl}/api/py/reddit/reddit-commentary`)
+    return path.startsWith(`https://${backendUrl}/api/py/reddit/reddit-commentary`)
 }
 
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {

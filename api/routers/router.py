@@ -66,8 +66,7 @@ async def process_reddit_commentary(task_id: str, url: str):
         try:
             # audio_speech = await asyncio.to_thread(text_to_speech_file, script)
             audio_speech = deepgram_service.generate_audio_with_deepgram(script)
-            cloudflare_s3.upload_file_to_s3(audio_speech, BUCKET_NAME, f"output_audio_{task_id}.mp3")
-            print("Successfully generated voiceover and uploaded to S3")
+            print("Successfully generated voiceover")
         except Exception as e:
             error_msg = f"Error generating voiceover: {str(e)}"
             print(error_msg)

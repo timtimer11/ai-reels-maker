@@ -22,7 +22,7 @@ def subtitle_generator(txt: str) -> TextClip:
     return TextClip(text=txt, font_size=24, color='white', stroke_color='black', stroke_width=1)
 
 
-def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
+def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO:
     """
     Merge video, audio, and captions with length check using MoviePy.
     """
@@ -75,7 +75,14 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
             logger=None,
             write_logfile=False,
         )
+        
+        # Close clips to free resources and avoid broken pipes
+        final.close()
+        video_clip.close()
+        audio_clip.close()
 
-        # Read result
+        # Read output bytes and return
         with open(output_path, "rb") as f:
-            return f.read()
+            data = f.read()
+        # Return an in-memory bytes buffer so upload_file_to_s3 (which expects a file-like) works
+        return BytesIO(data)

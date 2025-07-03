@@ -170,6 +170,8 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
         srt_path = os.path.join(tmpdir, "subs.srt")
         with open(srt_path, "w", encoding="utf-8") as f:
             f.write(deepgram_service.generate_captions_with_deepgram(audio_path))
+        
+        print('Generated subtitles')
 
         # Step 1: Burn subtitles (video only)
         if not run_ffmpeg([
@@ -179,6 +181,8 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
             subtitled_path
         ], timeout=60):
             raise RuntimeError("Subtitle burning failed")
+        
+        print('Burned subtitles to video')
 
         # Step 2: Merge with audio
         if not run_ffmpeg([
@@ -189,6 +193,8 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
             final_path
         ], timeout=60):
             raise RuntimeError("Audio merging failed")
+
+        print('Merged audio with video')
 
         # Step 3: Stream output with checks
         with open(final_path, 'rb') as f:

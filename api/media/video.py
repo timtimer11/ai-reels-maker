@@ -72,7 +72,6 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
             fps=video_clip.fps,
             threads=1,
             ffmpeg_params=["-movflags", "frag_keyframe+empty_moov+default_base_moof"],
-            verbose=False,
             logger=None,
             write_logfile=False,
         )

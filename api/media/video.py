@@ -59,7 +59,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
             srt_path,
             make_textclip=subtitle_generator,
             encoding='utf-8'
-        ).set_position(('center', 'bottom'))
+        )
 
         # Compose final clip
         final = CompositeVideoClip([video_clip, subtitles])

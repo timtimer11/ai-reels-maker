@@ -96,23 +96,51 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
         # Use FFmpeg for fast final export
         cmd = [
             'ffmpeg',
-            '-y',  # Overwrite output without asking
+            '-y',  # Overwrite without asking
             '-i', video_path,
             '-i', audio_path,
-            '-vf', f"subtitles='{srt_path}':force_style='Fontsize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=3'",
+            '-filter_complex',
+            f"[0:v]subtitles='{srt_path}':force_style='Fontsize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=3'[subs]",
+            '-map', '[subs]',  # Use subtitled video stream
+            '-map', '1:a:0',   # Use first audio stream from second input
             '-c:v', 'libx264',
-            '-preset', 'veryfast',  # Good balance between speed and quality
-            '-crf', '23',  # Quality level (18-28, lower is better)
+            '-preset', 'veryfast',  # Better than ultrafast for production
+            '-crf', '23',
             '-c:a', 'aac',
-            '-b:a', '192k',  # Audio bitrate
-            '-movflags', '+frag_keyframe+empty_moov+default_base_moof',
-            output_path
+            '-b:a', '192k',
+            '-ar', '48000',
+            '-ac', '2',
+            '-shortest',
+            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+            '-f', 'mp4',
+            'pipe:1'  # Stream directly to stdout
         ]
 
-        print('Starting FFmpeg export...')
-        subprocess.run(cmd, check=True)
-        print('Finished FFmpeg export')
-
-        # Read output bytes and return
-        with open(output_path, "rb") as f:
-            return BytesIO(f.read())
+        # Execute with proper resource limits
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL
+            )
+            
+            # Read output in chunks to avoid memory issues
+            output = BytesIO()
+            while True:
+                chunk = process.stdout.read(4096)
+                if not chunk:
+                    break
+                output.write(chunk)
+            
+            # Check for errors
+            if process.wait() != 0:
+                error_msg = process.stderr.read().decode()
+                raise RuntimeError(f"FFmpeg failed: {error_msg}")
+            
+            output.seek(0)
+            return output
+            
+        except Exception as e:
+            print(f"Error during processing: {str(e)}")
+            raise

@@ -55,7 +55,11 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
             f.write(srt_content)
 
         # Create subtitles overlay
-        subtitles = SubtitlesClip(srt_path, subtitle_generator).set_position(('center', 'bottom'))
+        subtitles = SubtitlesClip(
+            srt_path,
+            make_textclip=subtitle_generator,
+            encoding='utf-8'
+        ).set_position(('center', 'bottom'))
 
         # Compose final clip
         final = CompositeVideoClip([video_clip, subtitles])
@@ -65,8 +69,6 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:
             output_path,
             codec="libx264",
             audio_codec="aac",
-            fps=video_clip.fps,
-            verbose=False,
             logger=None
         )
 

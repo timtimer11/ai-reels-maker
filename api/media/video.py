@@ -2,10 +2,9 @@ import os
 import tempfile
 from io import BytesIO
 from moviepy import VideoFileClip, AudioFileClip, CompositeVideoClip, TextClip
-from moviepy.video.tools.subtitles import SubtitlesClip
+# from moviepy.video.tools.subtitles import SubtitlesClip
 from clients.deepgram import DeepgramService
 import subprocess
-
 
 deepgram_service = DeepgramService()
 

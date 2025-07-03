@@ -19,7 +19,7 @@ def get_video_duration(file_path: str) -> float:
 
 def subtitle_generator(txt: str) -> TextClip:
     """Generate a TextClip for subtitles."""
-    return TextClip(text=txt, font='Arial', font_size=24, color='white', stroke_color='black', stroke_width=1)
+    return TextClip(text=txt, font_size=24, color='white', stroke_color='black', stroke_width=1)
 
 
 def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> bytes:

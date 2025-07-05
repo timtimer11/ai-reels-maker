@@ -149,11 +149,3 @@ async def process_reddit_commentary(task_id: str, url: str):
 @router.get("/reddit-commentary/status/{task_id}")
 async def get_task_status(task_id: str):
     return task_queue.get_task_status(task_id)
-
-
-@router.post("/test-rate-limit")
-async def test_rate_limit():
-    global counter
-    counter += 1
-    print(f'button click number {counter}')
-    return {"click_count": counter}

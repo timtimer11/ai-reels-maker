@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+openai
+python-dotenv
+pydantic
+boto3
+deepgram-sdk
+deepgram-captions
+moviepy

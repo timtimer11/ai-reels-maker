@@ -9,7 +9,6 @@ const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
 
 const ratelimit = new Ratelimit({
     redis: redis,
@@ -19,7 +18,7 @@ const ratelimit = new Ratelimit({
   });
 
 const isAPI = (path: string) => {
-    return path.startsWith(`https://${backendUrl}/api/py/reddit/reddit-commentary`)
+    return path.startsWith("/api/py/reddit/reddit-commentary") || path.startsWith("/api/py/reddit/test-rate-limit")
 }
 
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {

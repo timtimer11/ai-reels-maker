@@ -1,5 +1,11 @@
 from fastapi import APIRouter
-from clients.openai import generate_commentary_script,text_to_speech_file
+# from ..clients.openai import generate_commentary_script
+# from ..clients.deepgram import DeepgramService
+# from ..storage.cloudflare_s3 import CloudflareS3
+# from ..media.video import process_video_streaming
+# from ..utils.task_queue import task_queue, TaskStatus
+# from ..clients.reddit import RedditClient
+from clients.openai import generate_commentary_script
 from clients.deepgram import DeepgramService
 from storage.cloudflare_s3 import CloudflareS3
 from media.video import process_video_streaming
@@ -10,6 +16,9 @@ import asyncio
 import traceback
 
 router = APIRouter()
+
+# Simple counter for rate limit testing
+counter = 0
 
 BUCKET_NAME = os.environ.get('CLOUDFLARE_TTS_BUCKET_NAME')
 
@@ -140,3 +149,11 @@ async def process_reddit_commentary(task_id: str, url: str):
 @router.get("/reddit-commentary/status/{task_id}")
 async def get_task_status(task_id: str):
     return task_queue.get_task_status(task_id)
+
+
+@router.post("/test-rate-limit")
+async def test_rate_limit():
+    global counter
+    counter += 1
+    print(f'button click number {counter}')
+    return {"click_count": counter}

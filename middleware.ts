@@ -18,7 +18,8 @@ const ratelimit = new Ratelimit({
   });
 
 const isAPI = (path: string) => {
-    return path.startsWith("/api/py/reddit/reddit-commentary") || path.startsWith("/api/py/reddit/test-rate-limit")
+  return path.includes("/api/py/reddit/reddit-commentary")
+      || path.includes("/api/py/reddit/test-rate-limit");
 }
 
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {

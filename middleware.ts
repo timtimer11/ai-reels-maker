@@ -22,24 +22,58 @@ const isAPI = (path: string) => {
       || path.includes("/api/py/reddit/test-rate-limit");
 }
 
-export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {
-    if (isAPI(request.nextUrl.pathname)) {
-        const {userId} = await auth();
-        const { success, limit, reset, remaining } = await ratelimit.limit(`${userId}`);
+// export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {
+//     if (isAPI(request.nextUrl.pathname)) {
+//         const {userId} = await auth();
+//         const { success, limit, reset, remaining } = await ratelimit.limit(`${userId}`);
 
-        const res = success ? NextResponse.next() : NextResponse.json({ errorMessage: "Rate limit exceeded" }, { status: 429 });
+//         const res = success ? NextResponse.next() : NextResponse.json({ errorMessage: "Rate limit exceeded" }, { status: 429 });
 
-        res.headers.set("X-RateLimit-Limit", limit.toString());
-        res.headers.set("X-RateLimit-Remaining", remaining.toString());
-        res.headers.set("X-RateLimit-Reset", reset.toString());
+//         res.headers.set("X-RateLimit-Limit", limit.toString());
+//         res.headers.set("X-RateLimit-Remaining", remaining.toString());
+//         res.headers.set("X-RateLimit-Reset", reset.toString());
 
 
-        if (!success) return res;
-        return res;
+//         if (!success) return res;
+//         return res;
+//     }
+//     if (isProtectedRoute(request)) await auth.protect()
+//     return NextResponse.next();
+// });
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isAPI(req.nextUrl.pathname)) {
+    const { userId } = await auth();
+    let meta: any;
+    let success = false;
+    try {
+      const result = await ratelimit.limit(userId!);
+      success = result.success;
+      meta = result;
+    } catch (e) {
+      console.error("Upstash limit() threw error:", e);
+      // Fail‐open: still allow the request
+      success = true;
+      meta = { limit: "?", remaining: "?", reset: "?" };
     }
-    if (isProtectedRoute(request)) await auth.protect()
-    return NextResponse.next();
+
+    console.log("Rate limit check:", { userId, ...meta });
+
+    const res = success
+      ? NextResponse.next()
+      : NextResponse.json({ errorMessage: "Rate limit exceeded" }, { status: 429 });
+
+    res.headers.set("X-RateLimit-Limit", String(meta.limit));
+    res.headers.set("X-RateLimit-Remaining", String(meta.remaining));
+    res.headers.set("X-RateLimit-Reset", String(meta.reset));
+
+    return res;
+  }
+
+  if (isProtectedRoute(req)) await auth.protect();
+  return NextResponse.next();
 });
+
 
 export const config = {
     matcher: [

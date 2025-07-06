@@ -92,14 +92,15 @@ export default function Home() {
   const getDisplayStatus = () => {
     if (status === "failed") return "Failed - Check error message below";
     if (status === "completed") return "Completed!";
-    if (status === "processing" && processingStartTime) {
-      const elapsed = Date.now() - processingStartTime;
-      if (elapsed > 10000) { // 10 seconds
-        return "Almost there...";
+    if (status === "processing") {
+      if (processingStartTime) {
+        const elapsed = Date.now() - processingStartTime;
+        if (elapsed > 7000) { // 7 seconds
+          return "Almost there...";
+        }
       }
       return "Processing...";
     }
-    if (status === "processing") return "Processing...";
     if (isLoading) return "Starting...";
     return status;
   };
@@ -107,7 +108,7 @@ export default function Home() {
   useEffect(() => {
     if (!taskId || status === "completed" || status === "failed") return;
     
-    const pollInterval = setInterval(checkTaskStatus, 2000);
+    const pollInterval = setInterval(checkTaskStatus, 5000);
     
     return () => {
       clearInterval(pollInterval);

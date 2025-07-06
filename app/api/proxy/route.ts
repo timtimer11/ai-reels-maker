@@ -10,23 +10,29 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(2, "86400 s"), // 1 request per day
+  limiter: Ratelimit.slidingWindow(1, "86400 s"), // 1 request per day
   ephemeralCache: new Map(),
   analytics: true,
 });
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Proxy request started');
+    
     // Get user authentication
     const { userId } = await auth();
     if (!userId) {
+      console.log('Unauthorized request');
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    console.log('User authenticated:', userId);
 
     // Apply rate limiting
     const { success, limit, reset, remaining } = await ratelimit.limit(userId);
+    console.log('Rate limit check:', { success, remaining });
     
     if (!success) {
+      console.log('Rate limit exceeded');
       return NextResponse.json(
         { errorMessage: "Rate limit exceeded" }, 
         { 
@@ -43,27 +49,38 @@ export async function POST(request: NextRequest) {
     // Get the backend URL from environment
     const backendUrl = process.env.BACKEND_HOST_URL;
     if (!backendUrl) {
+      console.error('Backend URL not configured');
       return NextResponse.json({ error: "Backend URL not configured" }, { status: 500 });
     }
+    console.log('Backend URL:', backendUrl);
 
-    // Get the request body
-    const body = await request.json();
+    // Get the URL parameter from the request
+    const { searchParams } = new URL(request.url);
+    const url = searchParams.get('url');
     
+    if (!url) {
+      console.error('URL parameter missing');
+      return NextResponse.json({ error: "URL parameter is required" }, { status: 400 });
+    }
+    console.log('Reddit URL:', url);
+
     // Forward the request to the backend
-    const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary`, {
+    const backendResponse = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary?url=${encodeURIComponent(url)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
     });
 
+    console.log('Backend response status:', backendResponse.status);
+
     // Get the response data
-    const data = await response.json();
+    const data = await backendResponse.json();
+    console.log('Backend response data:', data);
 
     // Return the response with rate limit headers
     return NextResponse.json(data, {
-      status: response.status,
+      status: backendResponse.status,
       headers: {
         "X-RateLimit-Limit": limit.toString(),
         "X-RateLimit-Remaining": remaining.toString(),
@@ -72,7 +89,10 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Proxy error:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Proxy error details:', error);
+    return NextResponse.json({ 
+      error: "Internal server error", 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 } 

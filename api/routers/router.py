@@ -1,10 +1,4 @@
 from fastapi import APIRouter
-# from ..clients.openai import generate_commentary_script
-# from ..clients.deepgram import DeepgramService
-# from ..storage.cloudflare_s3 import CloudflareS3
-# from ..media.video import process_video_streaming
-# from ..utils.task_queue import task_queue, TaskStatus
-# from ..clients.reddit import RedditClient
 from clients.openai import generate_commentary_script
 from clients.deepgram import DeepgramService
 from storage.cloudflare_s3 import CloudflareS3

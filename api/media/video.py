@@ -2,8 +2,6 @@ import os
 import tempfile
 from io import BytesIO
 from moviepy import VideoFileClip, AudioFileClip, TextClip
-# from moviepy.video.tools.subtitles import SubtitlesClip
-# from ..clients.deepgram import DeepgramService
 from clients.deepgram import DeepgramService
 import subprocess
 
@@ -59,43 +57,6 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
         
         print('Generated captions with Deepgram')
 
-        # # Create subtitles overlay
-        # subtitles = SubtitlesClip(
-        #     srt_path,
-        #     make_textclip=subtitle_generator,
-        #     encoding='utf-8'
-        # )
-        # print('Created subtitles overlay')
-
-        # # Compose final clip
-        # final = CompositeVideoClip([video_clip, subtitles])
-
-        # print('Composed a final clip')
-
-        # # Export
-        # final.write_videofile(
-        #     output_path,
-        #     codec="libx264",
-        #     audio_codec="aac",
-        #     fps=video_clip.fps,
-        #     threads=1,
-        #     ffmpeg_params=["-movflags", "frag_keyframe+empty_moov+default_base_moof"],
-        #     logger=None,
-        #     write_logfile=False,
-        # )
-        # print('Wrote final video file')
-        # # Close clips to free resources and avoid broken pipes
-        # final.close()
-        # video_clip.close()
-        # audio_clip.close()
-
-        # # Read output bytes and return
-        # with open(output_path, "rb") as f:
-        #     data = f.read()
-        # # Return an in-memory bytes buffer so upload_file_to_s3 (which expects a file-like) works
-        # return BytesIO(data)
-        # Use FFmpeg for fast final export
-        # FFmpeg command with proper audio mapping
         cmd = [
             'ffmpeg',
             '-y',  # Overwrite output

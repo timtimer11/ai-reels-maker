@@ -92,15 +92,7 @@ export default function Home() {
   const getDisplayStatus = () => {
     if (status === "failed") return "Failed - Check error message below";
     if (status === "completed") return "Completed!";
-    if (status === "processing") {
-      if (processingStartTime) {
-        const elapsed = Date.now() - processingStartTime;
-        if (elapsed > 7000) { // 7 seconds
-          return "Almost there...";
-        }
-      }
-      return "Processing...";
-    }
+    if (status === "processing") return "Processing...";
     if (isLoading) return "Starting...";
     return status;
   };

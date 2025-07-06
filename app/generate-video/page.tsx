@@ -19,8 +19,8 @@ export default function Home() {
       setStatus("");
       setError("");
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
-      const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary?url=` + encodeURIComponent(redditUrl), {
+      // Use the proxy instead of calling backend directly
+      const response = await fetch(`/api/proxy?url=` + encodeURIComponent(redditUrl), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

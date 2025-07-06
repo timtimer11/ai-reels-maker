@@ -18,27 +18,9 @@ const ratelimit = new Ratelimit({
   });
 
 const isAPI = (path: string) => {
-  return path.includes("/api/py/reddit/reddit-commentary");
+  return path.includes("/api/proxy");
 };
 
-// export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {
-//     if (isAPI(request.nextUrl.pathname)) {
-//         const {userId} = await auth();
-//         const { success, limit, reset, remaining } = await ratelimit.limit(`${userId}`);
-
-//         const res = success ? NextResponse.next() : NextResponse.json({ errorMessage: "Rate limit exceeded" }, { status: 429 });
-
-//         res.headers.set("X-RateLimit-Limit", limit.toString());
-//         res.headers.set("X-RateLimit-Remaining", remaining.toString());
-//         res.headers.set("X-RateLimit-Reset", reset.toString());
-
-
-//         if (!success) return res;
-//         return res;
-//     }
-//     if (isProtectedRoute(request)) await auth.protect()
-//     return NextResponse.next();
-// });
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {
   console.log('Middleware triggered for path:', request.nextUrl.pathname);
   

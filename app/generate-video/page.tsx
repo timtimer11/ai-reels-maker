@@ -27,15 +27,23 @@ export default function Home() {
         }
       });
 
-      if (!response.ok) throw new Error("Failed to start task");
+      if (!response.ok) {
+        if (response.status === 429) {
+          const errorData = await response.json();
+          setError(`Rate limit exceeded: ${errorData.errorMessage}`);
+          return;
+        }
+        throw new Error("Failed to start task");
+      }
 
       const data = await response.json();
       setTaskId(data.task_id);
       setStatus("processing");
+      // Don't set isLoading to false here - keep it true while processing
     } catch (err: any) {
-      console.log(err)
-    } finally {
-      setIsLoading(false); 
+      console.log(err);
+      setError(`Error: ${err.message}`);
+      setIsLoading(false); // Only set to false on error
     }
   };
 
@@ -53,15 +61,19 @@ export default function Home() {
       
       if (data.error && data.status === "failed") {
         setError(data.error);
+        setIsLoading(false); // Stop loading on failure
       }
       
       if (data.status === "completed") {
+        setIsLoading(false); // Stop loading on completion
         router.push(`/completed-generation/${taskId}`);
       } else if (data.status === "failed") {
+        setIsLoading(false); // Stop loading on failure
         // Error message is already set above
       }
     } catch (err: any) {
-      console.log(err)
+      console.log(err);
+      setIsLoading(false); // Stop loading on error
     }
   }, [taskId,router]);
 

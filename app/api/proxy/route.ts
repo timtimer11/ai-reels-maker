@@ -10,7 +10,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(1, "86400 s"), // 1 request per day
+  limiter: Ratelimit.slidingWindow(2, "86400 s"), // 1 request per day
   ephemeralCache: new Map(),
   analytics: true,
 });

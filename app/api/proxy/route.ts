@@ -10,7 +10,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(4, "86400 s"),
+  limiter: Ratelimit.slidingWindow(3, "86400 s"),
   ephemeralCache: new Map(),
   analytics: true,
 });

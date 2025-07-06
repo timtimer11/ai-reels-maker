@@ -31,6 +31,7 @@ export default function Home() {
         if (response.status === 429) {
           const errorData = await response.json();
           setError(`Rate limit exceeded: ${errorData.errorMessage}`);
+          setIsLoading(false); // Stop loading spinner on rate limit
           return;
         }
         throw new Error("Failed to start task");

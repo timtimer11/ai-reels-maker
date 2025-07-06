@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the backend URL from environment
-    const backendUrl = process.env.BACKEND_HOST_URL;
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
     if (!backendUrl) {
       console.error('Backend URL not configured');
       return NextResponse.json({ error: "Backend URL not configured" }, { status: 500 });

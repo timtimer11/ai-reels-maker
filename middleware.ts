@@ -18,25 +18,50 @@ const ratelimit = new Ratelimit({
   });
 
 const isAPI = (path: string) => {
-  return path.includes("/api/py/reddit/reddit-commentary")
-      || path.includes("/api/py/reddit/test-rate-limit");
-}
+  return path.includes("/api/py/reddit/reddit-commentary");
+};
 
+// export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {
+//     if (isAPI(request.nextUrl.pathname)) {
+//         const {userId} = await auth();
+//         const { success, limit, reset, remaining } = await ratelimit.limit(`${userId}`);
+
+//         const res = success ? NextResponse.next() : NextResponse.json({ errorMessage: "Rate limit exceeded" }, { status: 429 });
+
+//         res.headers.set("X-RateLimit-Limit", limit.toString());
+//         res.headers.set("X-RateLimit-Remaining", remaining.toString());
+//         res.headers.set("X-RateLimit-Reset", reset.toString());
+
+
+//         if (!success) return res;
+//         return res;
+//     }
+//     if (isProtectedRoute(request)) await auth.protect()
+//     return NextResponse.next();
+// });
 export default clerkMiddleware(async (auth: ClerkMiddlewareAuth, request: NextRequest) => {
-    if (isAPI(request.nextUrl.pathname)) {
-        const {userId} = await auth();
-        const { success, limit, reset, remaining } = await ratelimit.limit(`${userId}`);
+  console.log('Middleware triggered for path:', request.nextUrl.pathname);
+  
+  if (isAPI(request.nextUrl.pathname)) {
+      console.log('API route detected');
+      const {userId} = await auth();
+      console.log('User ID:', userId);
+      
+      const { success, limit, reset, remaining } = await ratelimit.limit(`${userId}`);
+      console.log('Rate limit result:', { success, limit, reset, remaining });
 
-        const res = success ? NextResponse.next() : NextResponse.json({ errorMessage: "Rate limit exceeded" }, { status: 429 });
+      const res = success ? NextResponse.next() : NextResponse.json({ errorMessage: "Rate limit exceeded" }, { status: 429 });
 
-        res.headers.set("X-RateLimit-Limit", limit.toString());
-        res.headers.set("X-RateLimit-Remaining", remaining.toString());
-        res.headers.set("X-RateLimit-Reset", reset.toString());
+      res.headers.set("X-RateLimit-Limit", limit.toString());
+      res.headers.set("X-RateLimit-Remaining", remaining.toString());
+      res.headers.set("X-RateLimit-Reset", reset.toString());
 
-
-        if (!success) return res;
-        return res;
-    }
-    if (isProtectedRoute(request)) await auth.protect()
-    return NextResponse.next();
+      if (!success) {
+          console.log('Rate limit exceeded for user:', userId);
+          return res;
+      }
+      return res;
+  }
+  if (isProtectedRoute(request)) await auth.protect()
+  return NextResponse.next();
 });

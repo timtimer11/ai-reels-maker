@@ -8,3 +8,5 @@ boto3
 deepgram-sdk
 deepgram-captions
 moviepy
+slowapi
+redis

@@ -20,7 +20,7 @@ export default function Home() {
       setError("");
 
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
-      const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary?url=` + encodeURIComponent(redditUrl), { // Railway deployment
+      const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary?url=` + encodeURIComponent(redditUrl), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

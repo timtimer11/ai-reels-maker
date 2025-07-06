@@ -5,12 +5,6 @@ from enum import Enum
 class TaskStatus(Enum):
     PENDING = "pending"
     PROCESSING = "processing"
-    FETCHING_REDDIT_POST = "fetching_reddit_post"
-    GENERATING_SCRIPT = "generating_script"
-    GENERATING_VOICEOVER = "generating_voiceover"
-    FETCHING_BACKGROUND_VIDEO = "fetching_background_video"
-    PROCESSING_VIDEO = "processing_video"
-    GETTING_VIDEO_URL = "getting_video_url"
     COMPLETED = "completed"
     FAILED = "failed"
 

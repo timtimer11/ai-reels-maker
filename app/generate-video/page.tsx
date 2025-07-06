@@ -12,6 +12,7 @@ export default function Home() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
 
   const onGenerate = async (redditUrl: string) => {
     try {
@@ -40,6 +41,7 @@ export default function Home() {
       const data = await response.json();
       setTaskId(data.task_id);
       setStatus("processing");
+      setProcessingStartTime(Date.now());
       // Don't set isLoading to false here - keep it true while processing
     } catch (err: any) {
       console.log(err);
@@ -53,11 +55,17 @@ export default function Home() {
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
-      const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary/status/${taskId}`); // Railway deployment
+      console.log('Checking task status for:', taskId, 'using backend URL:', backendUrl);
+      
+      const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary/status/${taskId}`);
+      console.log('Status response status:', response.status);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
       const data = await response.json();
+      console.log('Status response data:', data);
       setStatus(data.status);
       
       if (data.error && data.status === "failed") {
@@ -67,16 +75,34 @@ export default function Home() {
       
       if (data.status === "completed") {
         setIsLoading(false); // Stop loading on completion
+        setProcessingStartTime(null);
         router.push(`/completed-generation/${taskId}`);
       } else if (data.status === "failed") {
         setIsLoading(false); // Stop loading on failure
+        setProcessingStartTime(null);
         // Error message is already set above
       }
     } catch (err: any) {
-      console.log(err);
+      console.log('Error checking task status:', err);
       setIsLoading(false); // Stop loading on error
     }
   }, [taskId,router]);
+
+  // Function to get display status
+  const getDisplayStatus = () => {
+    if (status === "processing" && processingStartTime) {
+      const elapsed = Date.now() - processingStartTime;
+      if (elapsed > 10000) { // 10 seconds
+        return "Almost there...";
+      }
+    }
+    
+    if (status === "failed") return "Failed - Check error message below";
+    if (status === "completed") return "Completed!";
+    if (status === "processing") return "Processing...";
+    if (isLoading) return "Starting...";
+    return status;
+  };
 
   useEffect(() => {
     if (!taskId || status === "completed" || status === "failed") return;
@@ -119,16 +145,7 @@ export default function Home() {
               <div className="flex items-center gap-5">
                 {status !== "failed" && <Spinner size="medium" show />}
                 <p className={`text-${status === "failed" ? "red" : status === "completed" ? "green" : "blue"}-500 font-medium`}>
-                  {status === "failed" ? "Failed - Check error message below" :
-                  status === "fetching_reddit_post" ? "Fetching Reddit Post..." :
-                  status === "generating_script" ? "Generating Script..." :
-                  status === "generating_voiceover" ? "Generating Voiceover..." :
-                  status === "fetching_background_video" ? "Fetching Background Video..." :
-                  status === "processing_video" ? "Processing Video..." :
-                  status === "getting_video_url" ? "Getting Video URL..." :
-                  status === "processing" ? "Processing..." :
-                  isLoading ? "Starting..." :
-                  status}
+                  {getDisplayStatus()}
                 </p>
               </div>
             </div>

@@ -10,6 +10,9 @@ def generate_commentary_script(title: str, description: str) -> str:
         Title: {title}
         Description: {description}
 
+        If you see that the content does not make sense, try to make a story out of it,
+        but ONLY if it does not make sense at all. Othervise stick to original content story line.
+
         Follow these rules exactly:
         1. Respond ONLY with the voiceover text. Do NOT include any commentary, explanations, or formatting markup.
         2. Use clear, simple language suitable for a broad audience.

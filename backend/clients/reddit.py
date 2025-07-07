@@ -116,6 +116,7 @@ class RedditClient:
         try:
             # Try authenticated method first
             data = self.fetch_post_authenticated(url)
+            print('Fetched post:',data)
             post_data = self.extract_post_data(data, top_n)
             return post_data
         except Exception as e:

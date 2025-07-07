@@ -62,6 +62,7 @@ class RedditClient:
             }
             
             response = requests.get(auth_url, headers=auth_headers, timeout=10)
+            print('Fetched RAW:',response.json())
             print('Authenticated response received')
             
         except requests.RequestException as e:
@@ -116,7 +117,6 @@ class RedditClient:
         try:
             # Try authenticated method first
             data = self.fetch_post_authenticated(url)
-            print('Fetched post:',data)
             post_data = self.extract_post_data(data, top_n)
             return post_data
         except Exception as e:

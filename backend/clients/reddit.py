@@ -44,6 +44,11 @@ class RedditClient:
     def fetch_post_authenticated(self, url: str) -> Dict:
         """Fetch post using Reddit API authentication"""
         try:
+            # Handle mobile URLs by following redirect
+            if '/s/' in url:
+                response = requests.get(url, headers=self.headers, allow_redirects=True, timeout=10)
+                url = response.url
+            
             # Get access token
             token = self.get_reddit_access_token()
             

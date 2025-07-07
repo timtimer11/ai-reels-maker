@@ -37,6 +37,7 @@ async def process_reddit_commentary(task_id: str, url: str):
         try:
             post_data = reddit_client.get_post_and_comments(url, top_n=5)
             print("Successfully fetched Reddit post and extracted data")
+            print("Reddit post",post_data)
         except Exception as e:
             error_msg = f"Error fetching and processing Reddit post: {str(e)}"
             print(error_msg)

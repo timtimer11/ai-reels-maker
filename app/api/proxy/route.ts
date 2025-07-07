@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     console.log('Reddit URL:', url);
 
     // Forward the request to the backend
-    const backendResponse = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary?url=${encodeURIComponent(url)}`, {
+    const backendResponse = await fetch(`${backendUrl}/backend/py/reddit/reddit-commentary?url=${encodeURIComponent(url)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

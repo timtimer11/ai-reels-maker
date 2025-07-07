@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "pip3 install -r requirements.txt && python3 -m uvicorn api.index:app --reload --reload-exclude='api/services/*' --reload-exclude='api/routers/*' --timeout-keep-alive 75",
+    "fastapi-dev": "pip3 install -r requirements.txt && python3 -m uvicorn backend.index:app --reload --reload-exclude='backend/services/*' --reload-exclude='backend/routers/*' --timeout-keep-alive 75",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "build": "next build",

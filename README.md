@@ -15,11 +15,11 @@ This is a hybrid Next.js 14 + Python template. One great use case of this is to 
 
 ## How It Works
 
-The Python/FastAPI server is mapped into to Next.js app under `/api/`.
+The Python/FastAPI server is mapped into to Next.js app under `/backend/`.
 
-This is implemented using [`next.config.js` rewrites](https://github.com/digitros/nextjs-fastapi/blob/main/next.config.js) to map any request to `/api/py/:path*` to the FastAPI API, which is hosted in the `/api` folder.
+This is implemented using [`next.config.js` rewrites](https://github.com/digitros/nextjs-fastapi/blob/main/next.config.js) to map any request to `/backend/py/:path*` to the FastAPI API, which is hosted in the `/backend` folder.
 
-Also, the app/api routes are available on the same domain, so you can use NextJs Route Handlers and make requests to `/api/...`.
+Also, the app/api routes are available on the same domain, so you can use NextJs Route Handlers and make requests to `/backend/...`.
 
 On localhost, the rewrite will be made to the `127.0.0.1:8000` port, which is where the FastAPI server is running.
 

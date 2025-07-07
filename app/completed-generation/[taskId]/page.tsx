@@ -13,7 +13,7 @@ export default function CompletedGeneration() {
     const fetchVideoUrl = async () => {
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
-        const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary/status/${taskId}`); // Railway deployment
+        const response = await fetch(`${backendUrl}/backend/py/reddit/reddit-commentary/status/${taskId}`); // Railway deployment
         if (!response.ok) {
           throw new Error('Failed to fetch video URL');
         }

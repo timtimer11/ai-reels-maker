@@ -57,7 +57,7 @@ export default function Home() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_HOST;
       console.log('Checking task status for:', taskId, 'using backend URL:', backendUrl);
       
-      const response = await fetch(`${backendUrl}/api/py/reddit/reddit-commentary/status/${taskId}`);
+      const response = await fetch(`${backendUrl}/backend/py/reddit/reddit-commentary/status/${taskId}`);
       console.log('Status response status:', response.status);
       
       if (!response.ok) {

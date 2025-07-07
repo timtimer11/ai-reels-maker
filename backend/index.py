@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import router
 
-app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
+app = FastAPI(docs_url="/backend/py/docs", openapi_url="/backend/py/openapi.json")
 frontend_host_url = os.getenv("FRONTEND_HOST_URL")
 
 # Add CORS middleware
@@ -18,5 +18,5 @@ app.add_middleware(
     allow_headers=["*"], # Allows all HTTP headers
 )
 
-app.include_router(router.router, prefix="/api/py/reddit")
+app.include_router(router.router, prefix="/backend/py/reddit")
 

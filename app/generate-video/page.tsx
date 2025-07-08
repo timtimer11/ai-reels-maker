@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from 'next/navigation';
 import RedditVideoGenerator from '@/components/RedditVideoGenerator';
+import PredefinedPosts from '@/components/PredefinedPosts';
 import { Spinner } from "@/components/ui/loadingSpinner";
 import { Sparkles } from "lucide-react";
 
@@ -12,7 +13,6 @@ export default function Home() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
 
   const onGenerate = async (redditUrl: string) => {
     try {
@@ -41,7 +41,6 @@ export default function Home() {
       const data = await response.json();
       setTaskId(data.task_id);
       setStatus("processing");
-      setProcessingStartTime(Date.now());
       // Don't set isLoading to false here - keep it true while processing
     } catch (err: any) {
       console.log(err);
@@ -75,12 +74,9 @@ export default function Home() {
       
       if (data.status === "completed") {
         setIsLoading(false); // Stop loading on completion
-        setProcessingStartTime(null);
         router.push(`/completed-generation/${taskId}`);
       } else if (data.status === "failed") {
         setIsLoading(false); // Stop loading on failure
-        setProcessingStartTime(null);
-        // Error message is already set above
       }
     } catch (err: any) {
       console.log('Error checking task status:', err);
@@ -120,6 +116,12 @@ export default function Home() {
       </div>
       <div className="w-full max-w-2xl">
         <RedditVideoGenerator onGenerate={onGenerate} />
+        
+        {/* Pre-defined posts section */}
+        <div className="mt-12">
+          <PredefinedPosts onGenerate={onGenerate} />
+        </div>
+
         {(isLoading || (status !== "" && status !== "completed" && status !== "failed")) && (
           <div
             className="

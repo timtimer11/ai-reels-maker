@@ -17,7 +17,7 @@ export default function Contact() {
           
           <div className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
             <p className="mb-4">
-                Lately, I&apos;ve been seeing a ton of brain-rot videos everywhere. You know, those mindless reels that somehow monetize.
+                Lately, I&apos;ve been seeing a lot of mindless videos on social media. You know, those short reels with AI voiceover that somehow monetize.
             </p>
 
             <p className="mb-4">
@@ -29,15 +29,15 @@ export default function Contact() {
             </p>
 
             <p className="mb-4">
-                Instead, I just slapped together this app where you drop a Reddit post link and it spits out a video.
+                Instead, I just built this simple app where you drop a link to Reddit post and it generates a short storytelling video.
             </p>
 
             <p className="mb-4">
-            To make things worse, I put $5 into my OpenAI account (Sam Altman can thank me later). Technically, that makes me an investor too.
+            Also, I have deposited $5 into my OpenAI account. Technically, that makes me an investor too.
             </p>
 
             <p className="mb-4">
-             If you have read this far, you may want to check out my LinkedIn too.
+             If you have read this far, you may want to check out my LinkedIn.
             </p>
             </div>
           <div className="flex justify-center gap-4 mb-16">

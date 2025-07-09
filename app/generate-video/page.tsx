@@ -134,7 +134,7 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-purple-600" />
                 <p className="text-sm font-medium text-purple-800">
-                  The generation may take up to 30 seconds - depending on the internet speed
+                  The generation may take up to 30 seconds - depending on the internet speed or running tasks by other users
                 </p>
               </div>
               <div className="flex items-center gap-5">

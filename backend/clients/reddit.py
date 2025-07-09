@@ -5,7 +5,7 @@ from typing import Dict
 
 class RedditClient:
     """
-    This class is used to fetch a post and its comments from a given URL and return the post data.
+    This class is used to fetch a post and its comments from a given URL and return the post data
     """
     def __init__(self):
         self.headers = {
@@ -66,7 +66,6 @@ class RedditClient:
             }
             
             response = requests.get(auth_url, headers=auth_headers, timeout=10)
-            print('Fetched RAW:',response.json())
             print('Authenticated response received')
             
         except requests.RequestException as e:

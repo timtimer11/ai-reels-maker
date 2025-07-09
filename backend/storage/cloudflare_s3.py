@@ -15,14 +15,14 @@ CLOUDFLARE_PUBLIC_BUCKET_URL = os.environ.get('CLOUDFLARE_PUBLIC_BUCKET_URL')
 
 class CloudflareS3:
     """
-    This class is used to read and write files to a Cloudflare S3 bucket.
+    This class is used to read and write files to a Cloudflare S3 bucket
     """
     def __init__(self, s3_client=None):
         self.s3_client = s3_client or boto3.client(**S3_CONFIG)
 
     def read_file_from_s3(self, bucket_name: str, file_name: str) -> BytesIO:
         """
-        Read a file from S3 bucket and return its content as a BytesIO object.
+        Read a file from S3 bucket and return its content as a BytesIO object
         """
         try:
             full_path = f"{bucket_name}/{file_name}"
@@ -63,7 +63,7 @@ class CloudflareS3:
 
     def get_s3_url(self, bucket_name: str, file_name: str) -> str:
         """
-        Get the public URL for a file in S3 bucket.
+        Get the public URL for a file in S3 bucket
         """
         try:
             # Generate the URL

@@ -11,16 +11,13 @@ def get_audio_duration(file_path: str) -> float:
     """Return the duration of an audio file in seconds."""
     return AudioFileClip(file_path).duration
 
-
 def get_video_duration(file_path: str) -> float:
     """Return the duration of a video file in seconds."""
     return VideoFileClip(file_path).duration
 
-
 def subtitle_generator(txt: str) -> TextClip:
     """Generate a TextClip for subtitles."""
     return TextClip(text=txt, font_size=24, color='white', stroke_color='black', stroke_width=1)
-
 
 def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO:
     """
@@ -45,18 +42,10 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
         if a_duration >= v_duration:
             raise ValueError(f"Audio duration ({a_duration:.2f}s) >= video duration ({v_duration:.2f}s)")
 
-        # Load clips
-        audio_clip = AudioFileClip(audio_path)
-        print("Loaded audio clip")
-        video_clip = VideoFileClip(video_path).with_audio(audio_clip)
-        print("Combined audio and video clips")
         # Generate and write captions (SRT)
         srt_content = deepgram_service.generate_captions_with_deepgram(audio_path)
         with open(srt_path, "w", encoding="utf-8") as f:
             f.write(srt_content)
-        
-        print('Generated captions with Deepgram')
-
         cmd = [
             'ffmpeg',
             '-y',  # Overwrite output
@@ -72,20 +61,16 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
             '-shortest',  # End with shortest stream
             output_path
         ]
-
         # Execute FFmpeg
         try:
             subprocess.run(cmd, check=True, stderr=subprocess.PIPE, timeout=300)
-            
             # Verify and return output
             with open(output_path, "rb") as f:
                 if f.read(1):  # Check not empty
                     f.seek(0)
                     return BytesIO(f.read())
                 raise RuntimeError("Empty output file")
-                
-        except subprocess.CalledProcessError as e:
-            print(f"FFmpeg failed with error:\n{e.stderr.decode()}")
+        except subprocess.CalledProcessError:
             raise RuntimeError("Video processing failed")
         except subprocess.TimeoutExpired:
             raise RuntimeError("Processing timed out after 5 minutes")

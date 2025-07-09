@@ -26,8 +26,11 @@ class CloudflareS3:
         """
         try:
             full_path = f"{bucket_name}/{file_name}"
+            # Get the file from S3
             response = self.s3_client.get_object(Bucket=bucket_name, Key=full_path)
+            # Read the file content
             file_content = response['Body'].read()
+            # Return the file content as a BytesIO object
             return BytesIO(file_content)
         except Exception as e:
             print(f"Error reading file from S3: {e}")
@@ -47,7 +50,6 @@ class CloudflareS3:
             
             # Use the full path including bucket name
             full_path = f"{bucket_name}/{file_name_in_s3}"
-            print(f"Uploading file with full path: {full_path}")
             
             # Upload file to S3
             self.s3_client.upload_fileobj(
@@ -55,12 +57,8 @@ class CloudflareS3:
                 bucket_name,
                 full_path
             )
-            
-            print(f"Successfully uploaded file to S3 key: {full_path}")
-
             return True
         except Exception as e:
-            print(f"Error uploading file to S3: {e}")
             raise e
 
     def get_s3_url(self, bucket_name: str, file_name: str) -> str:
@@ -72,5 +70,4 @@ class CloudflareS3:
             url = f"{CLOUDFLARE_PUBLIC_BUCKET_URL}/{bucket_name}/{file_name}"
             return url
         except Exception as e:
-            print(f"Error generating S3 URL: {e}")
             raise e

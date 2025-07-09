@@ -9,7 +9,7 @@ const features = [
   {
     icon: Zap,
     title: "No Editing, No Extra Tools",
-    description: "Skip the hassle of generating voiceovers and stitching them with video clips - it&apos;s all handled in single click"
+    description: "Skip the hassle of generating voiceovers and stitching them with video clips - it's all handled in single click"
   },
   {
     icon: Palette,

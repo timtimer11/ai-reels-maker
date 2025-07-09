@@ -1,126 +1,102 @@
+import os
 from fastapi import APIRouter
-from clients.openai import generate_commentary_script
+import asyncio
+from clients.openai import OpenAIService
 from clients.deepgram import DeepgramService
 from storage.cloudflare_s3 import CloudflareS3
 from media.video import process_video_streaming
 from utils.task_queue import task_queue, TaskStatus
 from clients.reddit import RedditClient
-import os
-import asyncio
-import traceback
-
-router = APIRouter()
 
 BUCKET_NAME = os.environ.get('CLOUDFLARE_TTS_BUCKET_NAME')
 
+router = APIRouter()
 cloudflare_s3 = CloudflareS3()
 deepgram_service = DeepgramService()
+openai_service = OpenAIService()
 
 @router.post("/reddit-commentary")
 async def start_reddit_commentary(url: str):
-    task_id = task_queue.create_media_processing_task()
-    task_queue.update_task_status(task_id, TaskStatus.PROCESSING)
-    
-    # Start processing in background
-    asyncio.create_task(process_reddit_commentary(task_id, url))
-    
-    return {"task_id": task_id}
+    """Create a task and start processing in background"""
+    try:
+        task_id = task_queue.create_media_processing_task()
+        task_queue.update_task_status(task_id, TaskStatus.PROCESSING)
+        # Start processing in background
+        asyncio.create_task(process_reddit_commentary(task_id, url))
+        return {"task_id": task_id}
+    except Exception as e:
+        task_queue.update_task_status(task_id, TaskStatus.FAILED, error=str(e))
+        raise
 
 async def process_reddit_commentary(task_id: str, url: str):
+    """Process Reddit commentary in background"""
     try:
-        print(f"Starting Reddit commentary processing for task {task_id} with URL: {url}")
-        
-        # Step 1: Get Reddit content
-        print("Step 1: Fetching Reddit post and extracting data...")
+        # Get Reddit content
         reddit_client = RedditClient()
-        
         try:
             post_data = reddit_client.get_post_and_comments(url, top_n=5)
-            print("Successfully fetched Reddit post and extracted data")
         except Exception as e:
             error_msg = f"Error fetching and processing Reddit post: {str(e)}"
-            print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e 
         
-        # Step 2: Generate script
-        print("Step 2: Generating script...")
+        # Generate script
         try:
-            script = generate_commentary_script(post_data["title"], post_data["description"])
-            print("Successfully generated script")
+            script = openai_service.generate_commentary_script(post_data["title"], post_data["description"])
         except Exception as e:
             error_msg = f"Error generating script: {str(e)}"
-            print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e
         
-        # Step 3: Generate audio
-        print("Step 3: Generating voiceover...")
+        # Generate audio
         try:
             audio_speech = deepgram_service.generate_audio_with_deepgram(script)
-            print("Successfully generated voiceover")
         except Exception as e:
             error_msg = f"Error generating voiceover: {str(e)}"
-            print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e
         
-        # Step 4: Get video template
-        print("Step 4: Fetching background video...")
+        # Get video template
         try:
             subway_surfers_video = cloudflare_s3.read_file_from_s3(BUCKET_NAME, "ss_background.mp4")
-            print("Successfully fetched background video")
         except Exception as e:
             error_msg = f"Error fetching background video: {str(e)}"
-            print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e
         
-        # Step 5: Process video
-        print("Step 5: Processing video...")
+        # Process video
         try:
             video_bytes = process_video_streaming(audio_speech, subway_surfers_video)
-            print("Successfully processed video")
         except Exception as e:
             error_msg = f"Error processing video: {str(e)}"
-            print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e
 
-        # Step 6: Upload video to S3
-        print("Step 6: Uploading video to S3...")
+        # Upload video to S3
         try:
             cloudflare_s3.upload_file_to_s3(video_bytes, BUCKET_NAME, f"output_video_{task_id}.mp4")
-            print("Successfully uploaded video to S3")
         except Exception as e:
             error_msg = f"Error uploading video to S3: {str(e)}"
-            print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e
 
-        # Step 7: Get S3 URL for the video
-        print("Step 7: Getting video URL...")
+        # Get S3 URL for the video
         try:
             video_url = cloudflare_s3.get_s3_url(BUCKET_NAME, f"output_video_{task_id}.mp4")
-            print(f"Successfully got video URL: {video_url}")
         except Exception as e:
             error_msg = f"Error getting video URL: {str(e)}"
-            print(error_msg)
             task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
             raise e
         
         # Update task status to COMPLETED with video URL
         task_queue.update_task_status(task_id, TaskStatus.COMPLETED, video_url)
-        print(f"Task {task_id} completed successfully!")
-        
     except Exception as e:
         # If an error occurs, mark the task as failed
         error_msg = f"General error in process_reddit_commentary for task {task_id}: {str(e)}"
-        print(error_msg)
-        print(f"Full traceback: {traceback.format_exc()}")
         task_queue.update_task_status(task_id, TaskStatus.FAILED, error=error_msg)
         raise e
 
 @router.get("/reddit-commentary/status/{task_id}")
 async def get_task_status(task_id: str):
+    """Get the status of a running task"""
     return task_queue.get_task_status(task_id)

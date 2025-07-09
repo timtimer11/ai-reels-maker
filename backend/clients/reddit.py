@@ -1,29 +1,28 @@
-import requests
-import base64
 import os
-from typing import Dict
+import base64
+import requests
 from urllib.parse import urlparse
+from typing import Dict
 
 class RedditClient:
     """
-    This class is used to fetch a post and its comments from a given URL and return the post data.
+    Fetches a Reddit post and its comments from a given URL.
     """
     def __init__(self):
-        """
-        Initialize RedditClient with default headers.
-        """
         self.user_agent = 'ai-reels-builder/1.0 by TimTimer'
         self.headers = {
             'User-Agent': self.user_agent,
             'Accept': 'application/json, text/html, */*',
             'Accept-Language': 'en-US,en;q=0.9'
         }
-    
+        self.auth_headers = {
+            'User-Agent': self.user_agent
+        }
+
     def get_reddit_access_token(self):
-        """Get Reddit API access token using client credentials"""
+        """Get Reddit API access token using client credentials."""
         client_id = os.getenv("REDDIT_APP_CLIENT_ID")
         client_secret = os.getenv("REDDIT_APP_SECRET_KEY")
-
         if not client_id or not client_secret:
             raise Exception("Reddit API credentials not found in environment variables")
         auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
@@ -41,21 +40,17 @@ class RedditClient:
             return token
         except requests.RequestException as e:
             raise Exception(f"Failed to get Reddit access token: {e}") from e
-    
+
     def fetch_post_authenticated(self, url: str) -> Dict:
-        """Fetch post using Reddit API authentication"""
+        """Fetch post using Reddit API authentication."""
         try:
-            # Handle mobile short URLs
             if '/s/' in url:
-                resp = requests.get(url, headers=self.headers, allow_redirects=True, timeout=10)
-                resp.raise_for_status()
-                url = resp.url
-            # Normalize Reddit URLs
+                response = requests.get(url, headers=self.headers, allow_redirects=True, timeout=10)
+                response.raise_for_status()
+                url = response.url
             parsed = urlparse(url)
-            netloc = parsed.netloc
-            if 'reddit.com' not in netloc:
+            if 'reddit.com' not in parsed.netloc:
                 raise Exception(f"Invalid Reddit URL: {url}")
-            # Replace to oauth endpoint
             auth_url = url.replace('www.reddit.com', 'oauth.reddit.com').replace('reddit.com', 'oauth.reddit.com')
             if not auth_url.endswith('.json'):
                 auth_url += '.json'
@@ -68,12 +63,12 @@ class RedditClient:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            raise Exception(f"Network error fetching Reddit pos    t: {e}") from e
+            raise Exception(f"Network error fetching Reddit post: {e}") from e
         except Exception as e:
             raise Exception(f"Error in fetch_post_authenticated: {e}") from e
 
     def extract_post_data(self, data: Dict, top_n: int = 5) -> Dict:
-        """Extract the post data from the fetched post"""
+        """Extract title, description, and top comments from fetched post data."""
         try:
             title = data[0]["data"]["children"][0]["data"].get("title", "")
             description = data[0]["data"]["children"][0]["data"].get("selftext", "")
@@ -87,7 +82,7 @@ class RedditClient:
                     upvotes = int(upvotes_raw)
                 except (ValueError, TypeError):
                     upvotes = 0
-                if text:  # Only include non-empty comments
+                if text:
                     comment_list.append({"comment": text, "upvotes": upvotes})
             top_comments = sorted(comment_list, key=lambda x: x["upvotes"], reverse=True)[:top_n]
             return {
@@ -99,7 +94,7 @@ class RedditClient:
             raise Exception(f"Failed to extract post data: {e}") from e
 
     def get_post_and_comments(self, url: str, top_n: int = 5) -> Dict:
-        """Fetch a post and comments from a given URL and returns the post data"""
+        """Fetch a post and comments from a given URL and return the post data."""
         try:
             data = self.fetch_post_authenticated(url)
             post_data = self.extract_post_data(data, top_n)

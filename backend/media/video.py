@@ -8,11 +8,11 @@ import subprocess
 deepgram_service = DeepgramService()
 
 def get_audio_duration(file_path: str) -> float:
-    """Return the duration of an audio file in seconds."""
+    """Return the duration of an audio file in seconds"""
     return AudioFileClip(file_path).duration
 
 def get_video_duration(file_path: str) -> float:
-    """Return the duration of a video file in seconds."""
+    """Return the duration of a video file in seconds"""
     return VideoFileClip(file_path).duration
 
 def subtitle_generator(txt: str) -> TextClip:
@@ -21,7 +21,7 @@ def subtitle_generator(txt: str) -> TextClip:
 
 def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO:
     """
-    Merge video, audio, and captions with length check using MoviePy.
+    Merge video, audio, and captions with length check using MoviePy
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         # Write input bytes to temp files

@@ -6,7 +6,7 @@ DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
 
 class DeepgramService:
     """
-    This class is used to generate audio and captions with Deepgram.
+    This class is used to generate audio and captions with Deepgram
     """
     def __init__(self):
         self.deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
@@ -23,7 +23,7 @@ class DeepgramService:
 
     def generate_audio_with_deepgram(self, input_text: str) -> bytes:
         """
-        Generate audio with Deepgram and return raw bytes.
+        Generate audio with Deepgram and return raw bytes
         """
         try:
             # Build request body using input text
@@ -50,7 +50,7 @@ class DeepgramService:
 
     def generate_captions_with_deepgram(self, audio_file_path: str) -> str:
         """
-        Generate captions with Deepgram from an audio file path.
+        Generate captions with Deepgram from an audio file path
         """
         try:
             # Transcribe audio file using Deepgram

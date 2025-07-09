@@ -3,14 +3,14 @@ from openai import OpenAI
 
 class OpenAIService:
     """
-    This class is used to generate audio and captions with OpenAI.
+    This class is used to generate audio and captions with OpenAI
     """
     def __init__(self):
         self.openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
     def generate_commentary_script(self, title: str, description: str) -> str:
         """
-        Generate a concise, engaging voiceover script for vertical Shorts video:
+        Generate a concise, engaging voiceover script for vertical Shorts video
         """
         prompt = f"""
             Generate a concise, engaging voiceover script for vertical Shorts video:

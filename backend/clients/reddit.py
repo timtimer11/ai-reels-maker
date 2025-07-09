@@ -4,10 +4,6 @@ import os
 from typing import Dict
 from urllib.parse import urlparse
 
-class RedditAPIError(Exception):
-    """Custom exception for Reddit API errors."""
-    pass
-
 class RedditClient:
     """
     This class is used to fetch a post and its comments from a given URL and return the post data.
@@ -41,10 +37,10 @@ class RedditClient:
             response.raise_for_status()
             token = response.json().get('access_token')
             if not token:
-                raise RedditAPIError(f"No access_token in response: {response.text}")
+                raise Exception(f"No access_token in response: {response.text}")
             return token
         except requests.RequestException as e:
-            raise RedditAPIError(f"Failed to get Reddit access token: {e}") from e
+            raise Exception(f"Failed to get Reddit access token: {e}") from e
     
     def fetch_post_authenticated(self, url: str) -> Dict:
         """Fetch post using Reddit API authentication"""
@@ -58,7 +54,7 @@ class RedditClient:
             parsed = urlparse(url)
             netloc = parsed.netloc
             if 'reddit.com' not in netloc:
-                raise RedditAPIError(f"Invalid Reddit URL: {url}")
+                raise Exception(f"Invalid Reddit URL: {url}")
             # Replace to oauth endpoint
             auth_url = url.replace('www.reddit.com', 'oauth.reddit.com').replace('reddit.com', 'oauth.reddit.com')
             if not auth_url.endswith('.json'):
@@ -72,9 +68,9 @@ class RedditClient:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            raise RedditAPIError(f"Network error fetching Reddit pos    t: {e}") from e
+            raise Exception(f"Network error fetching Reddit pos    t: {e}") from e
         except Exception as e:
-            raise RedditAPIError(f"Error in fetch_post_authenticated: {e}") from e
+            raise Exception(f"Error in fetch_post_authenticated: {e}") from e
 
     def extract_post_data(self, data: Dict, top_n: int = 5) -> Dict:
         """Extract the post data from the fetched post"""
@@ -100,7 +96,7 @@ class RedditClient:
                 "top_comments": top_comments
             }
         except Exception as e:
-            raise RedditAPIError(f"Failed to extract post data: {e}") from e
+            raise Exception(f"Failed to extract post data: {e}") from e
 
     def get_post_and_comments(self, url: str, top_n: int = 5) -> Dict:
         """Fetch a post and comments from a given URL and returns the post data"""
@@ -108,5 +104,5 @@ class RedditClient:
             data = self.fetch_post_authenticated(url)
             post_data = self.extract_post_data(data, top_n)
             return post_data
-        except RedditAPIError as e:
-            raise RedditAPIError(f"Failed to fetch post and comments: {e}") from e
+        except Exception as e:
+            raise Exception(f"Failed to fetch post and comments: {e}") from e

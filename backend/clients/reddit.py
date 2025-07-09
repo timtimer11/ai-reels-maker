@@ -51,7 +51,7 @@ class RedditClient:
             parsed = urlparse(url)
             if 'reddit.com' not in parsed.netloc:
                 raise Exception(f"Invalid Reddit URL: {url}")
-            auth_url = url.replace('www.reddit.com', 'oauth.reddit.com').replace('reddit.com', 'oauth.reddit.com')
+            auth_url = url.replace('www.reddit.com', 'oauth.reddit.com')
             if not auth_url.endswith('.json'):
                 auth_url += '.json'
             token = self.get_reddit_access_token()

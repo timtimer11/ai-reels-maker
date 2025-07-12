@@ -8,11 +8,6 @@ class RedditClient:
     This class is used to fetch a post and its comments from a given URL and return the post data
     """
     def __init__(self):
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/html, */*',
-            'Accept-Language': 'en-US,en;q=0.9'
-        }
         # New headers for authenticated requests
         self.auth_headers = {
             'User-Agent': 'ai-reels-builder/1.0 by TimTimer'
@@ -45,7 +40,7 @@ class RedditClient:
         """Fetch post using Reddit API authentication"""
         try:
             if '/s/' in url:
-                response = requests.get(url, headers=self.headers, allow_redirects=True, timeout=10)
+                response = requests.get(url, headers=self.auth_headers, allow_redirects=True, timeout=10)
                 url = response.url
             
             # Get access token

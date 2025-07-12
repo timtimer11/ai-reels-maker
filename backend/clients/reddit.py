@@ -8,7 +8,6 @@ class RedditClient:
     This class is used to fetch a post and its comments from a given URL and return the post data
     """
     def __init__(self):
-        # New headers for authenticated requests
         self.auth_headers = {
             'User-Agent': 'ai-reels-builder/1.0 by TimTimer'
         }

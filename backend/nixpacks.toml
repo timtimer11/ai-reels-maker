@@ -1,2 +1,4 @@
 [phases.setup]
 	nixPkgs = ['...', 'ffmpeg']
+[start]
+	cmd = "python index.py"

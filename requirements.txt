@@ -5,6 +5,6 @@ openai
 python-dotenv
 pydantic
 boto3
-deepgram-sdk
+deepgram-sdk<4
 deepgram-captions
 moviepy

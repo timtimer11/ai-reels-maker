@@ -36,12 +36,6 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
         with open(video_path, "wb") as f:
             f.write(video_bytes.read())
 
-        # Duration checks
-        a_duration = get_audio_duration(audio_path)
-        v_duration = get_video_duration(video_path)
-        if a_duration >= v_duration:
-            raise ValueError(f"Audio duration ({a_duration:.2f}s) >= video duration ({v_duration:.2f}s)")
-
         # Generate and write captions (SRT)
         srt_content = deepgram_service.generate_captions_with_deepgram(audio_path)
         with open(srt_path, "w", encoding="utf-8") as f:
@@ -49,6 +43,7 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
         cmd = [
             'ffmpeg',
             '-y',  # Overwrite output
+            '-stream_loop', '-1',  # Loop video to match audio length
             '-i', video_path,
             '-i', audio_path,
             '-vf', f"subtitles='{srt_path}':force_style='Fontsize=18'",  # Burn subtitles

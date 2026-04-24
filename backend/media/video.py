@@ -47,10 +47,13 @@ def process_video_streaming(audio_bytes: bytes, video_bytes: BytesIO) -> BytesIO
             '-i', video_path,
             '-i', audio_path,
             '-vf', f"subtitles='{srt_path}':force_style='Fontsize=18'",  # Burn subtitles
-            '-c:v', 'libx264',  # Video codec
-            '-preset', 'veryfast',
-            '-c:a', 'aac',  # Audio codec
-            '-b:a', '192k',
+            '-c:v', 'libx264',
+            '-preset', 'medium',
+            '-crf', '28',
+            '-pix_fmt', 'yuv420p',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            '-movflags', '+faststart',
             '-map', '0:v',  # Map video from first input
             '-map', '1:a',  # Map audio from second input
             '-shortest',  # End with shortest stream
